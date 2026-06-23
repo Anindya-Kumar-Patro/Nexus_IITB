@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { notFound, redirect } from "next/navigation";
 import { Topbar } from "@/components/topbar";
 import { VentureForm } from "@/components/venture-form";

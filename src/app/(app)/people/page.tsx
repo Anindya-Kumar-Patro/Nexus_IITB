@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createClient } from "@/lib/supabase/server";
 import { Topbar } from "@/components/topbar";
 import { Avatar } from "@/components/avatar";

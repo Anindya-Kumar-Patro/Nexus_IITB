@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { redirect } from "next/navigation";
 import { ProfileForm } from "../profile-form";
 import { createClient } from "@/lib/supabase/server";

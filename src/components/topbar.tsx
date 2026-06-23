@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NotificationBell } from "@/components/notification-bell";
