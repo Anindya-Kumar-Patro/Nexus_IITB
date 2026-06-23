@@ -23,7 +23,7 @@ export async function applyToVenture(
 
   const { error } = await supabase
     .from("applications")
-    .insert({ venture_id: ventureId, applicant_id: user.id, role, message });
+    .insert([{ venture_id: ventureId, applicant_id: user.id, role, message }] as any);
 
   if (error) {
     if (error.code === "23505") return { error: "You have already applied to this venture." };
