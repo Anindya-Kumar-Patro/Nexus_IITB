@@ -6,22 +6,12 @@ import { Input, Textarea, Label, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/chip-select";
 import { STAGES, ROLES_NEEDED, DOMAINS } from "@/lib/constants";
-import type { Venture } from "@/types/database";
-import type { VentureState } from "@/actions/ventures";
 
-export function VentureForm({
-  action,
-  venture,
-  submitLabel,
-}: {
-  action: (prev: VentureState, fd: FormData) => Promise<VentureState>;
-  venture?: Venture;
-  submitLabel: string;
-}) {
-  const [state, formAction, pending] = useActionState<VentureState, FormData>(action, {});
+export function VentureForm({ action, venture, submitLabel }) {
+  const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-4 sm:gap-5">
       <div>
         <Label>Title</Label>
         <Input name="title" defaultValue={venture?.title} placeholder="e.g. UPI-for-Mess" required />
@@ -42,32 +32,29 @@ export function VentureForm({
         <Label>Description</Label>
         <Textarea
           name="description"
-          rows={6}
+          rows={5}
           defaultValue={venture?.description}
           placeholder="The problem, your solution, and where things stand."
           required
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* stack on mobile, side by side on sm+ */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label>Stage</Label>
           <Select name="stage" defaultValue={venture?.stage ?? "Brainstorming"}>
             {STAGES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+              <option key={s} value={s}>{s}</option>
             ))}
           </Select>
         </div>
         <div>
           <Label>Domain</Label>
           <Select name="domain" defaultValue={venture?.domain ?? ""}>
-            <option value="">Select…</option>
+            <option value="">Select...</option>
             {DOMAINS.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
+              <option key={d} value={d}>{d}</option>
             ))}
           </Select>
         </div>
@@ -86,8 +73,8 @@ export function VentureForm({
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
-      <Button type="submit" disabled={pending} className="self-start">
-        {pending ? "Saving…" : submitLabel}
+      <Button type="submit" disabled={pending} className="w-full sm:w-auto sm:self-start">
+        {pending ? "Saving..." : submitLabel}
       </Button>
     </form>
   );

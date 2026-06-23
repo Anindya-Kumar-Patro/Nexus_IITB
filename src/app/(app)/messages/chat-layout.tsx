@@ -39,6 +39,8 @@ export function ChatLayout({
   const router = useRouter();
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  // "list" | "chat" | "profile"
+  const [mobileView, setMobileView] = useState(selectedAppId ? "chat" : "list");
   const [showProfile, setShowProfile] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
   const [settings, setSettings] = useState(initialSettings ?? { pinned: false, blocked: false });
@@ -54,7 +56,12 @@ export function ChatLayout({
   useEffect(() => {
     setMessages(initialMessages);
     setSettings(initialSettings ?? { pinned: false, blocked: false });
-    if (selectedAppId) setUnreadCounts((prev) => ({ ...prev, [selectedAppId]: 0 }));
+    if (selectedAppId) {
+      setUnreadCounts((prev) => ({ ...prev, [selectedAppId]: 0 }));
+      setMobileView("chat");
+    } else {
+      setMobileView("list");
+    }
   }, [conversationId, initialMessages, initialSettings, selectedAppId]);
 
   useEffect(() => {
@@ -87,7 +94,9 @@ export function ChatLayout({
     return () => { supabase.removeChannel(channel); };
   }, [applications, currentUser.id, selectedAppId]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
@@ -116,25 +125,161 @@ export function ChatLayout({
   const linkBtnCls = "flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50";
   const panelLinkCls = "flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-2 hover:bg-brand-50";
 
-  // On mobile: if an app is selected, show Pane 3 only. Otherwise show Pane 2.
-  const showListOnMobile = !selectedAppId;
+  // Profile content — reused in both mobile full-screen and desktop pane 4
+  const ProfileContent = () => (
+    <>
+      {isReceived(selectedApp) && applicantProfile ? (
+        <>
+          <div className="flex flex-col items-center text-center">
+            <Avatar name={applicantProfile.full_name} size={72} />
+            <h3 className="mt-3 text-lg font-semibold text-ink">{applicantProfile.full_name}</h3>
+            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+            <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
+          </div>
+          {applicantProfile.skills && applicantProfile.skills.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-medium text-ink-3">Skills</p>
+              <div className="flex flex-wrap gap-1.5">
+                {applicantProfile.skills.map((s) => (
+                  <span key={s} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-4 flex flex-col gap-2">
+            {applicantProfile.linkedin_url && (
+              <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={panelLinkCls}>
+                <Linkedin size={15} /> LinkedIn
+              </a>
+            )}
+            <a href={"mailto:" + applicantProfile.email} className={panelLinkCls}>
+              <Mail size={15} /> {applicantProfile.email}
+            </a>
+          </div>
+        </>
+      ) : ventureDetails ? (
+        <>
+          <h3 className="text-base font-semibold text-ink">{ventureDetails.title}</h3>
+          <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
+          <div className="mt-3"><StageBadge stage={ventureDetails.stage} /></div>
+        </>
+      ) : null}
+    </>
+  );
+
+  // Pending/rejected center content
+  const PendingContent = () => (
+    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
+      {isReceived(selectedApp) && applicantProfile ? (
+        <div className="mx-auto max-w-md">
+          <div className="rounded-xl border border-line bg-white p-5 sm:p-6">
+            <div className="flex flex-col items-center text-center">
+              <Avatar name={applicantProfile.full_name} size={64} />
+              <h2 className="mt-3 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
+              <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+              <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
+            </div>
+            {applicantProfile.skills && applicantProfile.skills.length > 0 && (
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {applicantProfile.skills.map((s) => (
+                  <span key={s} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{s}</span>
+                ))}
+              </div>
+            )}
+            {selectedApp.message && (
+              <div className="mt-4 rounded-lg bg-brand-50 p-4">
+                <p className="mb-1 text-xs font-medium text-ink-3">Why they are a fit</p>
+                <p className="text-sm text-ink">{selectedApp.message}</p>
+              </div>
+            )}
+            <div className="mt-4 flex justify-center gap-3">
+              {applicantProfile.linkedin_url && (
+                <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={linkBtnCls}>
+                  <Linkedin size={15} /> LinkedIn
+                </a>
+              )}
+              <a href={"mailto:" + applicantProfile.email} className={linkBtnCls}>
+                <Mail size={15} /> Email
+              </a>
+            </div>
+            {selectedApp.status === "pending" && (
+              <div className="mt-5 flex gap-3 border-t border-line pt-4">
+                <button
+                  onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "accepted").then(() => router.refresh()))}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-400"
+                >
+                  <Check size={16} /> Accept
+                </button>
+                <button
+                  onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "rejected").then(() => router.refresh()))}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line py-2.5 text-sm font-medium text-ink-2 hover:bg-brand-50"
+                >
+                  <XCircle size={16} /> Reject
+                </button>
+              </div>
+            )}
+            {selectedApp.status === "rejected" && (
+              <div className="mt-4 flex justify-center">
+                <span className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-medium text-red-700">Application rejected</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : ventureDetails ? (
+        <div className="mx-auto max-w-md">
+          <div className="rounded-xl border border-line bg-white p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
+                <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
+              </div>
+              <StageBadge stage={ventureDetails.stage} />
+            </div>
+            <div className="mt-4 rounded-lg bg-brand-50 p-4">
+              <p className="mb-1 text-xs font-medium text-ink-3">Your application</p>
+              <p className="text-sm text-ink">Applied as <span className="font-medium">{selectedApp.role}</span></p>
+              {selectedApp.message && <p className="mt-2 text-sm text-ink-2">{selectedApp.message}</p>}
+            </div>
+            <div className="mt-4 flex justify-center">
+              <span className={cn("rounded-full px-4 py-1.5 text-sm font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
+                {selectedApp.status === "pending" ? "Waiting for response" : selectedApp.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 
   return (
     <div className="flex overflow-hidden -mx-4 -my-4 lg:-mx-7 lg:-my-7" style={{ height: "calc(100vh - 7rem)" }}>
 
-      {/* Pane 2 - application list */}
+      {/* ─── MOBILE PROFILE VIEW (full screen) ─── */}
+      {mobileView === "profile" && selectedApp && (
+        <div className="flex flex-1 flex-col lg:hidden">
+          <div className="flex items-center gap-3 border-b border-line bg-white px-4 py-3">
+            <button onClick={() => setMobileView("chat")} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3">
+              <ArrowLeft size={16} />
+            </button>
+            <p className="text-sm font-semibold text-ink">
+              {isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title}
+            </p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            <ProfileContent />
+          </div>
+        </div>
+      )}
+
+      {/* ─── PANE 2 — list ─── */}
       <div className={cn(
         "flex flex-col border-r border-line bg-white",
-        "w-full lg:w-72 lg:shrink-0",
-        selectedAppId ? "hidden lg:flex" : "flex"
+        "w-full lg:w-72 lg:shrink-0 lg:flex",
+        mobileView === "list" ? "flex" : "hidden lg:flex"
       )}>
         <div className="border-b border-line px-4 py-4">
-          <h2 className="text-base font-semibold text-ink">
-            {tab === "applied" ? "Applied" : "Received"}
-          </h2>
-          <p className="text-xs text-ink-3">
-            {applications.length} application{applications.length !== 1 ? "s" : ""}
-          </p>
+          <h2 className="text-base font-semibold text-ink">{tab === "applied" ? "Applied" : "Received"}</h2>
+          <p className="text-xs text-ink-3">{applications.length} application{applications.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {sortedApps.length === 0 ? (
@@ -147,10 +292,12 @@ export function ChatLayout({
             const isSelected = app.id === selectedAppId;
             const isPinned = isSelected && settings.pinned;
             const unread = unreadCounts[app.id] ?? 0;
-
             return (
               <button key={app.id}
-                onClick={() => router.push("/messages?tab=" + tab + "&app=" + app.id)}
+                onClick={() => {
+                  router.push("/messages?tab=" + tab + "&app=" + app.id);
+                  setMobileView("chat");
+                }}
                 className={cn(
                   "flex w-full items-center gap-3 border-b border-line px-4 py-3 text-left transition",
                   isSelected ? "bg-brand-50" : "hover:bg-brand-50/50",
@@ -166,9 +313,7 @@ export function ChatLayout({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={cn("truncate text-sm text-ink", unread > 0 ? "font-semibold" : "font-medium")}>
-                    {name ?? "Unknown"}
-                  </p>
+                  <p className={cn("truncate text-sm text-ink", unread > 0 ? "font-semibold" : "font-medium")}>{name ?? "Unknown"}</p>
                   {ventureName && <p className="truncate text-xs font-medium text-brand-600">{ventureName}</p>}
                   <p className="truncate text-xs text-ink-3">{app.role} · {app.status}</p>
                 </div>
@@ -186,10 +331,11 @@ export function ChatLayout({
         </div>
       </div>
 
-      {/* Pane 3 */}
+      {/* ─── PANE 3 — chat / pending / rejected ─── */}
       <div className={cn(
         "flex flex-1 flex-col overflow-hidden",
-        selectedAppId ? "flex" : "hidden lg:flex"
+        mobileView === "chat" ? "flex" : "hidden lg:flex",
+        mobileView === "profile" && "hidden"
       )}>
         {!selectedApp ? (
           <div className="hidden lg:flex flex-1 items-center justify-center bg-brand-50/30">
@@ -201,17 +347,27 @@ export function ChatLayout({
         ) : (
           <>
             {/* topbar */}
-            <div className="flex items-center gap-3 border-b border-line bg-white px-4 py-3">
-              {/* back button on mobile */}
+            <div className="flex items-center gap-2 border-b border-line bg-white px-3 sm:px-5 py-3">
+              {/* mobile back to list */}
               <button
-                onClick={() => router.push("/messages?tab=" + tab)}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3 hover:bg-brand-50 lg:hidden"
+                onClick={() => { setMobileView("list"); router.push("/messages?tab=" + tab); }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink-3 lg:hidden"
               >
                 <ArrowLeft size={16} />
               </button>
 
-              <button onClick={() => setShowProfile(!showProfile)} className="flex flex-1 min-w-0 items-center gap-3">
-                <Avatar name={isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title} size={36} />
+              {/* tap to open profile — mobile goes full screen, desktop toggles pane 4 */}
+              <button
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    setMobileView("profile");
+                  } else {
+                    setShowProfile(!showProfile);
+                  }
+                }}
+                className="flex flex-1 min-w-0 items-center gap-2 sm:gap-3"
+              >
+                <Avatar name={isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title} size={34} />
                 <div className="min-w-0 text-left">
                   <p className="truncate text-sm font-semibold text-ink">
                     {isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title}
@@ -222,29 +378,23 @@ export function ChatLayout({
                       : "Applied as " + selectedApp.role}
                   </p>
                 </div>
-                <ArrowRight size={16} className="shrink-0 text-ink-3" />
+                <ArrowRight size={14} className="shrink-0 text-ink-3" />
               </button>
 
-              <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
+              <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
                 {selectedApp.status}
               </span>
 
               {selectedApp.status === "accepted" && conversationId && (
                 <>
                   <button
-                    onClick={() => startTransition(async () => {
-                      await togglePin(conversationId, settings.pinned);
-                      setSettings((s) => ({ ...s, pinned: !s.pinned }));
-                    })}
+                    onClick={() => startTransition(async () => { await togglePin(conversationId, settings.pinned); setSettings((s) => ({ ...s, pinned: !s.pinned })); })}
                     className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3 hover:bg-brand-50"
                   >
                     {settings.pinned ? <PinOff size={15} /> : <Pin size={15} />}
                   </button>
                   <button
-                    onClick={() => startTransition(async () => {
-                      await toggleBlock(conversationId, settings.blocked);
-                      setSettings((s) => ({ ...s, blocked: !s.blocked }));
-                    })}
+                    onClick={() => startTransition(async () => { await toggleBlock(conversationId, settings.blocked); setSettings((s) => ({ ...s, blocked: !s.blocked })); })}
                     className={cn("hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line hover:bg-brand-50", settings.blocked ? "text-red-500" : "text-ink-3")}
                   >
                     {settings.blocked ? <Shield size={15} /> : <ShieldOff size={15} />}
@@ -253,7 +403,7 @@ export function ChatLayout({
               )}
 
               {showProfile && (
-                <button onClick={() => setShowProfile(false)} className="text-ink-3 hover:text-ink">
+                <button onClick={() => setShowProfile(false)} className="hidden lg:flex text-ink-3 hover:text-ink">
                   <X size={18} />
                 </button>
               )}
@@ -267,56 +417,47 @@ export function ChatLayout({
                       <Shield size={32} className="mx-auto mb-3 text-ink-3" />
                       <p className="text-sm font-medium text-ink-2">This conversation is blocked</p>
                       <button
-                        onClick={() => startTransition(async () => {
-                          await toggleBlock(conversationId, settings.blocked);
-                          setSettings((s) => ({ ...s, blocked: false }));
-                        })}
+                        onClick={() => startTransition(async () => { await toggleBlock(conversationId, settings.blocked); setSettings((s) => ({ ...s, blocked: false })); })}
                         className="mt-3 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50"
-                      >
-                        Unblock
-                      </button>
+                      >Unblock</button>
                     </div>
                   </div>
                 ) : selectedApp.status === "accepted" && conversationId ? (
                   <>
-                    <div className="relative flex-1 overflow-y-auto px-4 py-4">
+                    <div className="relative flex-1 overflow-y-auto px-3 sm:px-5 py-4">
                       <div className="flex flex-col gap-3">
                         {messages.length === 0 && (
                           <p className="py-8 text-center text-sm text-ink-3">No messages yet. Say hello!</p>
                         )}
                         {messages.map((msg, index) => {
                           const isMe = msg.sender_id === currentUser.id;
-                          const isSystem = isSystemMessage(msg, index);
-
-                          if (isSystem) {
+                          if (isSystemMessage(msg, index)) {
                             return (
                               <div key={msg.id} className="flex justify-center py-2">
-                                <div className="flex max-w-[90%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-ink-2">
-                                  <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                                <div className="flex max-w-[90%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-xs text-ink-2">
+                                  <Info size={13} className="mt-0.5 shrink-0 text-brand-600" />
                                   <p className="leading-relaxed">{msg.body}</p>
                                 </div>
                               </div>
                             );
                           }
-
                           return (
                             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
                               <div className={cn(
-                                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
+                                "max-w-[80%] rounded-2xl px-3 sm:px-4 py-2.5 text-sm",
                                 isMe ? "rounded-tr-sm bg-brand-600 text-white" : "rounded-tl-sm border border-line bg-white text-ink"
                               )}>
                                 {msg.body && <p className="leading-relaxed">{msg.body}</p>}
                                 {msg.file_url && (
                                   isImageFile(msg.file_name) ? (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-2 max-h-48 rounded-lg object-cover" />
+                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-2 max-h-48 w-full rounded-lg object-cover" />
                                     </a>
                                   ) : (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer"
                                       className={cn("mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
                                         isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800"
-                                      )}
-                                    >
+                                      )}>
                                       {getFileIcon(msg.file_name)}
                                       <span className="truncate">{msg.file_name ?? "File"}</span>
                                     </a>
@@ -333,14 +474,12 @@ export function ChatLayout({
                       </div>
                       {messages.length > 5 && (
                         <button onClick={scrollToBottom}
-                          className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50"
-                        >
+                          className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50">
                           <ChevronDown size={16} />
                         </button>
                       )}
                     </div>
-
-                    <div className="border-t border-line bg-white px-4 py-3">
+                    <div className="border-t border-line bg-white px-3 sm:px-4 py-3">
                       {selectedFile && (
                         <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-2">
                           {getFileIcon(selectedFile.name)}
@@ -349,15 +488,8 @@ export function ChatLayout({
                           <button onClick={() => setSelectedFile(null)} className="text-ink-3 hover:text-ink"><X size={14} /></button>
                         </div>
                       )}
-                      <form
-                        action={async (fd) => {
-                          if (selectedFile) fd.set("file", selectedFile);
-                          await sendAction(fd);
-                          setSelectedFile(null);
-                        }}
-                        className="flex items-end gap-2"
-                      >
-                        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5">
+                      <form action={async (fd) => { if (selectedFile) fd.set("file", selectedFile); await sendAction(fd); setSelectedFile(null); }} className="flex items-end gap-2">
+                        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3 sm:px-4 py-2.5">
                           <input name="body" placeholder="Type a message..." className="flex-1 bg-transparent text-sm outline-none" autoComplete="off" />
                           <button type="button" onClick={() => fileInputRef.current?.click()} className="text-ink-3 hover:text-brand-600">
                             <Paperclip size={18} />
@@ -368,140 +500,23 @@ export function ChatLayout({
                               if (!f) return;
                               if (f.size > 26214400) { alert("File must be under 25 MB"); return; }
                               setSelectedFile(f);
-                            }}
-                          />
+                            }} />
                         </div>
                         <button type="submit" disabled={sending}
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-400 disabled:opacity-50"
-                        >
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-400 disabled:opacity-50">
                           <Send size={16} />
                         </button>
                       </form>
                       {msgState.error && <p className="mt-1 text-xs text-red-500">{msgState.error}</p>}
                     </div>
                   </>
-                ) : (
-                  <div className="flex-1 overflow-y-auto px-4 py-6">
-                    {isReceived(selectedApp) && applicantProfile ? (
-                      <div className="mx-auto max-w-md">
-                        <div className="rounded-xl border border-line bg-white p-6">
-                          <div className="flex flex-col items-center text-center">
-                            <Avatar name={applicantProfile.full_name} size={72} />
-                            <h2 className="mt-4 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
-                            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
-                            <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
-                          </div>
-                          {applicantProfile.skills && applicantProfile.skills.length > 0 && (
-                            <div className="mt-5 flex flex-wrap justify-center gap-2">
-                              {applicantProfile.skills.map((s) => (
-                                <span key={s} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{s}</span>
-                              ))}
-                            </div>
-                          )}
-                          {selectedApp.message && (
-                            <div className="mt-5 rounded-lg bg-brand-50 p-4">
-                              <p className="mb-1 text-xs font-medium text-ink-3">Why they are a fit</p>
-                              <p className="text-sm text-ink">{selectedApp.message}</p>
-                            </div>
-                          )}
-                          <div className="mt-5 flex justify-center gap-3">
-                            {applicantProfile.linkedin_url && (
-                              <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={linkBtnCls}>
-                                <Linkedin size={15} /> LinkedIn
-                              </a>
-                            )}
-                            <a href={"mailto:" + applicantProfile.email} className={linkBtnCls}>
-                              <Mail size={15} /> Email
-                            </a>
-                          </div>
-                          {selectedApp.status === "pending" && (
-                            <div className="mt-6 flex gap-3 border-t border-line pt-5">
-                              <button
-                                onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "accepted").then(() => router.refresh()))}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-400"
-                              >
-                                <Check size={16} /> Accept
-                              </button>
-                              <button
-                                onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "rejected").then(() => router.refresh()))}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line py-2.5 text-sm font-medium text-ink-2 hover:bg-brand-50"
-                              >
-                                <XCircle size={16} /> Reject
-                              </button>
-                            </div>
-                          )}
-                          {selectedApp.status === "rejected" && (
-                            <div className="mt-5 flex justify-center">
-                              <span className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-medium text-red-700">Application rejected</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : ventureDetails ? (
-                      <div className="mx-auto max-w-md">
-                        <div className="rounded-xl border border-line bg-white p-6">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
-                              <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
-                            </div>
-                            <StageBadge stage={ventureDetails.stage} />
-                          </div>
-                          <div className="mt-4 rounded-lg bg-brand-50 p-4">
-                            <p className="mb-1 text-xs font-medium text-ink-3">Your application</p>
-                            <p className="text-sm text-ink">Applied as <span className="font-medium">{selectedApp.role}</span></p>
-                            {selectedApp.message && <p className="mt-2 text-sm text-ink-2">{selectedApp.message}</p>}
-                          </div>
-                          <div className="mt-4 flex justify-center">
-                            <span className={cn("rounded-full px-4 py-1.5 text-sm font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
-                              {selectedApp.status === "pending" ? "Waiting for response" : selectedApp.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
+                ) : <PendingContent />}
               </div>
 
-              {/* Pane 4 - hidden on mobile */}
+              {/* ─── PANE 4 — desktop only ─── */}
               {showProfile && selectedApp.status === "accepted" && (
                 <div className="hidden lg:flex w-72 shrink-0 flex-col overflow-y-auto border-l border-line bg-white px-5 py-6">
-                  {isReceived(selectedApp) && applicantProfile ? (
-                    <>
-                      <div className="flex flex-col items-center text-center">
-                        <Avatar name={applicantProfile.full_name} size={64} />
-                        <h3 className="mt-3 text-base font-semibold text-ink">{applicantProfile.full_name}</h3>
-                        <p className="text-xs text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
-                      </div>
-                      {applicantProfile.skills && applicantProfile.skills.length > 0 && (
-                        <div className="mt-4">
-                          <p className="mb-2 text-xs font-medium text-ink-3">Skills</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {applicantProfile.skills.map((s) => (
-                              <span key={s} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800">{s}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      <div className="mt-4 flex flex-col gap-2">
-                        {applicantProfile.linkedin_url && (
-                          <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={panelLinkCls}>
-                            <Linkedin size={15} /> LinkedIn
-                          </a>
-                        )}
-                        <a href={"mailto:" + applicantProfile.email} className={panelLinkCls}>
-                          <Mail size={15} /> {applicantProfile.email}
-                        </a>
-                      </div>
-                    </>
-                  ) : ventureDetails ? (
-                    <>
-                      <h3 className="text-base font-semibold text-ink">{ventureDetails.title}</h3>
-                      <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
-                      <div className="mt-3"><StageBadge stage={ventureDetails.stage} /></div>
-                    </>
-                  ) : null}
+                  <ProfileContent />
                 </div>
               )}
             </div>
