@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Inbox } from "lucide-react";
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {

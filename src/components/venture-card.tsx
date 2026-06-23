@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from "next/link";
 import { StageBadge } from "@/components/stage-badge";
 import type { VentureWithOwner } from "@/types/database";

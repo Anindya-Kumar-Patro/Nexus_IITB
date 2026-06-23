@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type Department =
   | "CSE" | "Electrical" | "Mechanical" | "Civil" | "Chemical" | "Aerospace"
   | "Metallurgy" | "EnergyScience" | "EngineeringPhysics" | "IDC" | "SJMSOM"

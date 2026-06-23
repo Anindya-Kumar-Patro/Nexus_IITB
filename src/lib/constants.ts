@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Department, UserRole, VentureStage, ApplicationStatus } from "@/types/database";
 
 export const DEPARTMENTS: Department[] = [

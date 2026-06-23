@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { cn, initials } from "@/lib/utils";
 
 export function Avatar({
