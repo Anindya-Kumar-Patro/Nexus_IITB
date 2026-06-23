@@ -16,18 +16,35 @@ export default async function FeedPage({ searchParams }) {
     .select("*, owner:profiles!ventures_owner_id_fkey(full_name, department, role)")
     .order("created_at", { ascending: false });
 
+  // if searching by keyword, also find owner ids whose names match
+  let ownerIds: string[] = [];
   if (q) {
-    query = query.or(
-      "title.ilike.%" + q + "%,one_liner.ilike.%" + q + "%,description.ilike.%" + q + "%"
-    );
+    const { data: matchingProfiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("full_name", "%" + q + "%");
+    ownerIds = (matchingProfiles ?? []).map((p) => p.id);
   }
+
+  if (q) {
+    // search title, one_liner, description OR owner name match
+    if (ownerIds.length > 0) {
+      query = query.or(
+        "title.ilike.%" + q + "%,one_liner.ilike.%" + q + "%,description.ilike.%" + q + "%,owner_id.in.(" + ownerIds.join(",") + ")"
+      );
+    } else {
+      query = query.or(
+        "title.ilike.%" + q + "%,one_liner.ilike.%" + q + "%,description.ilike.%" + q + "%"
+      );
+    }
+  }
+
   if (stage) query = query.eq("stage", stage);
   if (domain) query = query.eq("domain", domain);
   if (role) query = query.contains("roles_needed", [role]);
 
   const { data, error } = await query;
   const ventures = data ?? [];
-
   const hasFilters = !!(q || stage || domain || role);
 
   return (
