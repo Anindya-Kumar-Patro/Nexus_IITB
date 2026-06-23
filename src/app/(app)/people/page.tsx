@@ -1,9 +1,9 @@
 // @ts-nocheck
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Topbar } from "@/components/topbar";
 import { Avatar } from "@/components/avatar";
 import { EmptyState } from "@/components/empty-state";
-import type { Profile } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -15,36 +15,51 @@ export default async function PeoplePage() {
     .not("full_name", "is", null)
     .order("created_at", { ascending: false });
 
-  const people = (data ?? []) as Profile[];
+  const people = data ?? [];
 
   return (
     <div>
       <Topbar title="People" />
+
       {people.length === 0 ? (
         <EmptyState title="No one here yet" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {people.map((p) => (
-            <div key={p.id} className="rounded-xl border border-line bg-white p-5">
+            <Link
+              key={p.id}
+              href={"/people/" + p.id}
+              className="group rounded-xl border border-line bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-100"
+            >
               <div className="flex items-center gap-3">
                 <Avatar name={p.full_name} size={48} />
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-ink">{p.full_name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-ink group-hover:text-brand-800">
+                    {p.full_name}
+                  </p>
                   <p className="text-sm text-ink-3">
                     {p.department} · {p.role}
                   </p>
                 </div>
               </div>
-              {p.skills.length > 0 && (
+              {p.skills && p.skills.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {p.skills.slice(0, 4).map((s) => (
-                    <span key={s} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800">
+                    <span
+                      key={s}
+                      className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800"
+                    >
                       {s}
                     </span>
                   ))}
+                  {p.skills.length > 4 && (
+                    <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-ink-3">
+                      +{p.skills.length - 4}
+                    </span>
+                  )}
                 </div>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}
