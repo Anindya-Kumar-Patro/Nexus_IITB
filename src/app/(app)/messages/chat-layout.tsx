@@ -13,173 +13,90 @@ import { updateApplicationStatus } from "@/actions/applications";
 import { togglePin, toggleBlock } from "@/actions/conversation-settings";
 import {
   Send, Paperclip, ChevronDown, X, Check, XCircle,
-  Linkedin, Mail, ArrowRight, Pin, PinOff, ShieldOff, Shield,
-  FileText, File, Info,
+  Linkedin, Mail, ArrowRight, ArrowLeft, Pin, PinOff,
+  ShieldOff, Shield, FileText, File, Info,
 } from "lucide-react";
-import type { Profile } from "@/types/database";
-import type { MessageState } from "@/actions/messages";
 
-type AppWithMeta = {
-  id: string;
-  venture_id: string;
-  applicant_id: string;
-  role: string;
-  message: string | null;
-  status: "pending" | "accepted" | "rejected";
-  created_at: string;
-  updated_at: string;
-  _conv_id: string | null;
-  _last_message_at: string | null;
-  _unread_count: number;
-  applicant?: Profile | null;
-  venture?: {
-    id: string;
-    title: string;
-    one_liner: string;
-    stage: string;
-    owner_id?: string;
-    roles_needed?: string[];
-    description?: string;
-    domain?: string | null;
-  } | null;
-};
+function isSystemMessage(msg, index) { return index === 0; }
 
-type ChatMessage = {
-  id: string;
-  sender_id: string;
-  body: string | null;
-  file_url: string | null;
-  file_name: string | null;
-  created_at: string;
-};
-
-type ConvSettings = { pinned: boolean; blocked: boolean };
-
-// First message in a conversation is the system message (application summary)
-// We detect it by checking if it's the oldest message and body contains the applicant name
-function isSystemMessage(msg: ChatMessage, index: number) {
-  return index === 0;
-}
-
-function getFileIcon(fileName: string | null) {
+function getFileIcon(fileName) {
   if (!fileName) return <File size={14} />;
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
   if (["pdf", "doc", "docx", "txt", "md"].includes(ext)) return <FileText size={14} />;
   return <File size={14} />;
 }
 
-function isImageFile(fileName: string | null) {
+function isImageFile(fileName) {
   if (!fileName) return false;
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
   return ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
 }
 
 export function ChatLayout({
-  tab,
-  applications,
-  selectedAppId,
-  conversationId,
-  messages: initialMessages,
-  currentUser,
-  isOwnerView,
-  convSettings: initialSettings,
-}: {
-  tab: string;
-  applications: AppWithMeta[];
-  selectedAppId: string | null;
-  conversationId: string | null;
-  messages: ChatMessage[];
-  currentUser: Profile;
-  isOwnerView: boolean;
-  convSettings: ConvSettings | null;
+  tab, applications, selectedAppId, conversationId,
+  messages: initialMessages, currentUser, isOwnerView, convSettings: initialSettings,
 }) {
   const router = useRouter();
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [settings, setSettings] = useState<ConvSettings>(
-    initialSettings ?? { pinned: false, blocked: false }
-  );
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
+  const [messages, setMessages] = useState(initialMessages);
+  const [settings, setSettings] = useState(initialSettings ?? { pinned: false, blocked: false });
+  const [unreadCounts, setUnreadCounts] = useState(
     Object.fromEntries(applications.map((a) => [a.id, a._unread_count]))
   );
   const [, startTransition] = useTransition();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const selectedApp = applications.find((a) => a.id === selectedAppId) ?? null;
-  const isReceived = (app: AppWithMeta) => !!app.applicant;
+  const isReceived = (app) => !!app.applicant;
 
   useEffect(() => {
     setMessages(initialMessages);
     setSettings(initialSettings ?? { pinned: false, blocked: false });
-    if (selectedAppId) {
-      setUnreadCounts((prev) => ({ ...prev, [selectedAppId]: 0 }));
-    }
+    if (selectedAppId) setUnreadCounts((prev) => ({ ...prev, [selectedAppId]: 0 }));
   }, [conversationId, initialMessages, initialSettings, selectedAppId]);
 
-  // realtime new messages
   useEffect(() => {
     if (!conversationId) return;
     const supabase = createClient();
     const channel = supabase
       .channel("messages:" + conversationId)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-        filter: "conversation_id=eq." + conversationId,
-      }, (payload) => {
-        const newMsg = payload.new as ChatMessage;
-        setMessages((prev) =>
-          prev.find((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]
-        );
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: "conversation_id=eq." + conversationId },
+        (payload) => {
+          const newMsg = payload.new;
+          setMessages((prev) => prev.find((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [conversationId]);
 
-  // realtime unread for other conversations
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
       .channel("unread-counts:" + currentUser.id)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-      }, (payload) => {
-        const msg = payload.new as { conversation_id: string; sender_id: string };
-        if (msg.sender_id === currentUser.id) return;
-        const app = applications.find((a) => a._conv_id === msg.conversation_id);
-        if (!app || app.id === selectedAppId) return;
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [app.id]: (prev[app.id] ?? 0) + 1,
-        }));
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const msg = payload.new;
+          if (msg.sender_id === currentUser.id) return;
+          const app = applications.find((a) => a._conv_id === msg.conversation_id);
+          if (!app || app.id === selectedAppId) return;
+          setUnreadCounts((prev) => ({ ...prev, [app.id]: (prev[app.id] ?? 0) + 1 }));
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [applications, currentUser.id, selectedAppId]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const scrollToBottom = () =>
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const boundSend = conversationId
     ? sendMessage.bind(null, conversationId)
-    : async (_prev: MessageState, _fd: FormData): Promise<MessageState> => ({
-        error: "No conversation yet.",
-      });
+    : async () => ({ error: "No conversation yet." });
 
-  const [msgState, sendAction, sending] = useActionState<MessageState, FormData>(
-    boundSend, {}
-  );
+  const [msgState, sendAction, sending] = useActionState(boundSend, {});
 
-  // sort: pinned first, then unread, then by last message time
   const sortedApps = [...applications].sort((a, b) => {
     const aPinned = a.id === selectedAppId ? settings.pinned : false;
     const bPinned = b.id === selectedAppId ? settings.pinned : false;
@@ -196,15 +113,21 @@ export function ChatLayout({
 
   const applicantProfile = selectedApp?.applicant ?? null;
   const ventureDetails = selectedApp?.venture ?? null;
-
   const linkBtnCls = "flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50";
   const panelLinkCls = "flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-2 hover:bg-brand-50";
 
-  return (
-    <div className="flex h-screen overflow-hidden -mx-7 -my-7">
+  // On mobile: if an app is selected, show Pane 3 only. Otherwise show Pane 2.
+  const showListOnMobile = !selectedAppId;
 
-      {/* Pane 2 */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-line bg-white">
+  return (
+    <div className="flex overflow-hidden -mx-4 -my-4 lg:-mx-7 lg:-my-7" style={{ height: "calc(100vh - 7rem)" }}>
+
+      {/* Pane 2 - application list */}
+      <div className={cn(
+        "flex flex-col border-r border-line bg-white",
+        "w-full lg:w-72 lg:shrink-0",
+        selectedAppId ? "hidden lg:flex" : "flex"
+      )}>
         <div className="border-b border-line px-4 py-4">
           <h2 className="text-base font-semibold text-ink">
             {tab === "applied" ? "Applied" : "Received"}
@@ -218,422 +141,373 @@ export function ChatLayout({
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <p className="text-sm text-ink-3">No applications yet</p>
             </div>
-          ) : (
-            sortedApps.map((app) => {
-              const name = isReceived(app) ? app.applicant?.full_name : app.venture?.title;
-              const ventureName = isReceived(app) ? app.venture?.title : null;
-              const isSelected = app.id === selectedAppId;
-              const isPinned = isSelected && settings.pinned;
-              const unread = unreadCounts[app.id] ?? 0;
+          ) : sortedApps.map((app) => {
+            const name = isReceived(app) ? app.applicant?.full_name : app.venture?.title;
+            const ventureName = isReceived(app) ? app.venture?.title : null;
+            const isSelected = app.id === selectedAppId;
+            const isPinned = isSelected && settings.pinned;
+            const unread = unreadCounts[app.id] ?? 0;
 
-              return (
-                <button
-                  key={app.id}
-                  onClick={() => router.push("/messages?tab=" + tab + "&app=" + app.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 border-b border-line px-4 py-3 text-left transition",
-                    isSelected ? "bg-brand-50" : "hover:bg-brand-50/50",
-                    unread > 0 && !isSelected && "bg-brand-50/30"
+            return (
+              <button key={app.id}
+                onClick={() => router.push("/messages?tab=" + tab + "&app=" + app.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 border-b border-line px-4 py-3 text-left transition",
+                  isSelected ? "bg-brand-50" : "hover:bg-brand-50/50",
+                  unread > 0 && !isSelected && "bg-brand-50/30"
+                )}
+              >
+                <div className="relative shrink-0">
+                  <Avatar name={name} size={40} />
+                  {isPinned && (
+                    <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-white">
+                      <Pin size={9} />
+                    </div>
                   )}
-                >
-                  <div className="relative shrink-0">
-                    <Avatar name={name} size={40} />
-                    {isPinned && (
-                      <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-white">
-                        <Pin size={9} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={cn("truncate text-sm text-ink", unread > 0 ? "font-semibold" : "font-medium")}>
-                      {name ?? "Unknown"}
-                    </p>
-                    {ventureName && (
-                      <p className="truncate text-xs font-medium text-brand-600">{ventureName}</p>
-                    )}
-                    <p className="truncate text-xs text-ink-3">
-                      {app.role} · {app.status}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    {app._last_message_at && (
-                      <p className="text-[10px] text-ink-3">{timeAgo(app._last_message_at)}</p>
-                    )}
-                    {unread > 0 && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
-                        {unread > 9 ? "9+" : unread}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })
-          )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={cn("truncate text-sm text-ink", unread > 0 ? "font-semibold" : "font-medium")}>
+                    {name ?? "Unknown"}
+                  </p>
+                  {ventureName && <p className="truncate text-xs font-medium text-brand-600">{ventureName}</p>}
+                  <p className="truncate text-xs text-ink-3">{app.role} · {app.status}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  {app._last_message_at && <p className="text-[10px] text-ink-3">{timeAgo(app._last_message_at)}</p>}
+                  {unread > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Pane 3 */}
-      {!selectedApp ? (
-        <div className="flex flex-1 items-center justify-center bg-brand-50/30">
-          <div className="text-center">
-            <p className="text-lg font-medium text-ink-2">Select an application</p>
-            <p className="mt-1 text-sm text-ink-3">Choose from the list to view details or chat</p>
+      <div className={cn(
+        "flex flex-1 flex-col overflow-hidden",
+        selectedAppId ? "flex" : "hidden lg:flex"
+      )}>
+        {!selectedApp ? (
+          <div className="hidden lg:flex flex-1 items-center justify-center bg-brand-50/30">
+            <div className="text-center">
+              <p className="text-lg font-medium text-ink-2">Select an application</p>
+              <p className="mt-1 text-sm text-ink-3">Choose from the list to view details or chat</p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-1 flex-col overflow-hidden">
-
-          {/* topbar */}
-          <div className="flex items-center gap-3 border-b border-line bg-white px-5 py-3">
-            <button
-              onClick={() => setShowProfile(!showProfile)}
-              className="flex flex-1 min-w-0 items-center gap-3"
-            >
-              <Avatar
-                name={isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title}
-                size={38}
-              />
-              <div className="min-w-0 text-left">
-                <p className="truncate text-sm font-semibold text-ink">
-                  {isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title}
-                </p>
-                <p className="text-xs text-ink-3">
-                  {isReceived(selectedApp)
-                    ? ventureDetails?.title + " · " + selectedApp.role
-                    : "Applied as " + selectedApp.role}
-                </p>
-              </div>
-              <ArrowRight size={16} className="shrink-0 text-ink-3" />
-            </button>
-
-            <span className={cn("rounded-full px-3 py-1 text-xs font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
-              {selectedApp.status}
-            </span>
-
-            {selectedApp.status === "accepted" && conversationId && (
-              <>
-                <button
-                  onClick={() => startTransition(async () => {
-                    await togglePin(conversationId, settings.pinned);
-                    setSettings((s) => ({ ...s, pinned: !s.pinned }));
-                  })}
-                  title={settings.pinned ? "Unpin" : "Pin"}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3 hover:bg-brand-50"
-                >
-                  {settings.pinned ? <PinOff size={15} /> : <Pin size={15} />}
-                </button>
-                <button
-                  onClick={() => startTransition(async () => {
-                    await toggleBlock(conversationId, settings.blocked);
-                    setSettings((s) => ({ ...s, blocked: !s.blocked }));
-                  })}
-                  title={settings.blocked ? "Unblock" : "Block"}
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full border border-line hover:bg-brand-50",
-                    settings.blocked ? "text-red-500" : "text-ink-3"
-                  )}
-                >
-                  {settings.blocked ? <Shield size={15} /> : <ShieldOff size={15} />}
-                </button>
-              </>
-            )}
-
-            {showProfile && (
-              <button onClick={() => setShowProfile(false)} className="text-ink-3 hover:text-ink">
-                <X size={18} />
+        ) : (
+          <>
+            {/* topbar */}
+            <div className="flex items-center gap-3 border-b border-line bg-white px-4 py-3">
+              {/* back button on mobile */}
+              <button
+                onClick={() => router.push("/messages?tab=" + tab)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3 hover:bg-brand-50 lg:hidden"
+              >
+                <ArrowLeft size={16} />
               </button>
-            )}
-          </div>
 
-          <div className="flex flex-1 overflow-hidden">
-            <div className="flex flex-1 flex-col overflow-hidden">
-
-              {settings.blocked ? (
-                <div className="flex flex-1 items-center justify-center">
-                  <div className="text-center">
-                    <Shield size={32} className="mx-auto mb-3 text-ink-3" />
-                    <p className="text-sm font-medium text-ink-2">This conversation is blocked</p>
-                    <button
-                      onClick={() => startTransition(async () => {
-                        await toggleBlock(conversationId!, settings.blocked);
-                        setSettings((s) => ({ ...s, blocked: false }));
-                      })}
-                      className="mt-3 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50"
-                    >
-                      Unblock
-                    </button>
-                  </div>
+              <button onClick={() => setShowProfile(!showProfile)} className="flex flex-1 min-w-0 items-center gap-3">
+                <Avatar name={isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title} size={36} />
+                <div className="min-w-0 text-left">
+                  <p className="truncate text-sm font-semibold text-ink">
+                    {isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title}
+                  </p>
+                  <p className="truncate text-xs text-ink-3">
+                    {isReceived(selectedApp)
+                      ? (ventureDetails?.title ?? "") + " · " + selectedApp.role
+                      : "Applied as " + selectedApp.role}
+                  </p>
                 </div>
-              ) : selectedApp.status === "accepted" && conversationId ? (
-                <>
-                  {/* messages */}
-                  <div className="relative flex-1 overflow-y-auto px-5 py-4">
-                    <div className="flex flex-col gap-3">
-                      {messages.length === 0 && (
-                        <p className="py-8 text-center text-sm text-ink-3">No messages yet.</p>
-                      )}
-                      {messages.map((msg, index) => {
-                        const isMe = msg.sender_id === currentUser.id;
-                        const isSystem = isSystemMessage(msg, index);
+                <ArrowRight size={16} className="shrink-0 text-ink-3" />
+              </button>
 
-                        if (isSystem) {
+              <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
+                {selectedApp.status}
+              </span>
+
+              {selectedApp.status === "accepted" && conversationId && (
+                <>
+                  <button
+                    onClick={() => startTransition(async () => {
+                      await togglePin(conversationId, settings.pinned);
+                      setSettings((s) => ({ ...s, pinned: !s.pinned }));
+                    })}
+                    className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3 hover:bg-brand-50"
+                  >
+                    {settings.pinned ? <PinOff size={15} /> : <Pin size={15} />}
+                  </button>
+                  <button
+                    onClick={() => startTransition(async () => {
+                      await toggleBlock(conversationId, settings.blocked);
+                      setSettings((s) => ({ ...s, blocked: !s.blocked }));
+                    })}
+                    className={cn("hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line hover:bg-brand-50", settings.blocked ? "text-red-500" : "text-ink-3")}
+                  >
+                    {settings.blocked ? <Shield size={15} /> : <ShieldOff size={15} />}
+                  </button>
+                </>
+              )}
+
+              {showProfile && (
+                <button onClick={() => setShowProfile(false)} className="text-ink-3 hover:text-ink">
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+              <div className="flex flex-1 flex-col overflow-hidden">
+                {settings.blocked ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <div className="text-center">
+                      <Shield size={32} className="mx-auto mb-3 text-ink-3" />
+                      <p className="text-sm font-medium text-ink-2">This conversation is blocked</p>
+                      <button
+                        onClick={() => startTransition(async () => {
+                          await toggleBlock(conversationId, settings.blocked);
+                          setSettings((s) => ({ ...s, blocked: false }));
+                        })}
+                        className="mt-3 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50"
+                      >
+                        Unblock
+                      </button>
+                    </div>
+                  </div>
+                ) : selectedApp.status === "accepted" && conversationId ? (
+                  <>
+                    <div className="relative flex-1 overflow-y-auto px-4 py-4">
+                      <div className="flex flex-col gap-3">
+                        {messages.length === 0 && (
+                          <p className="py-8 text-center text-sm text-ink-3">No messages yet. Say hello!</p>
+                        )}
+                        {messages.map((msg, index) => {
+                          const isMe = msg.sender_id === currentUser.id;
+                          const isSystem = isSystemMessage(msg, index);
+
+                          if (isSystem) {
+                            return (
+                              <div key={msg.id} className="flex justify-center py-2">
+                                <div className="flex max-w-[90%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-ink-2">
+                                  <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                                  <p className="leading-relaxed">{msg.body}</p>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           return (
-                            <div key={msg.id} className="flex justify-center py-2">
-                              <div className="flex max-w-[85%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-xs text-ink-2">
-                                <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
-                                <p className="leading-relaxed">{msg.body}</p>
+                            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                              <div className={cn(
+                                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
+                                isMe ? "rounded-tr-sm bg-brand-600 text-white" : "rounded-tl-sm border border-line bg-white text-ink"
+                              )}>
+                                {msg.body && <p className="leading-relaxed">{msg.body}</p>}
+                                {msg.file_url && (
+                                  isImageFile(msg.file_name) ? (
+                                    <a href={msg.file_url} target="_blank" rel="noreferrer">
+                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-2 max-h-48 rounded-lg object-cover" />
+                                    </a>
+                                  ) : (
+                                    <a href={msg.file_url} target="_blank" rel="noreferrer"
+                                      className={cn("mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
+                                        isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800"
+                                      )}
+                                    >
+                                      {getFileIcon(msg.file_name)}
+                                      <span className="truncate">{msg.file_name ?? "File"}</span>
+                                    </a>
+                                  )
+                                )}
+                                <p className={cn("mt-1 text-right text-[10px]", isMe ? "text-white/60" : "text-ink-3")}>
+                                  {timeAgo(msg.created_at)}
+                                </p>
                               </div>
                             </div>
                           );
-                        }
-
-                        return (
-                          <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                            <div className={cn(
-                              "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm",
-                              isMe
-                                ? "rounded-tr-sm bg-brand-600 text-white"
-                                : "rounded-tl-sm border border-line bg-white text-ink"
-                            )}>
-                              {msg.body && <p className="leading-relaxed">{msg.body}</p>}
-                              {msg.file_url && (
-                                isImageFile(msg.file_name) ? (
-                                  <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                    <img
-                                      src={msg.file_url}
-                                      alt={msg.file_name ?? "image"}
-                                      className="mt-2 max-h-48 rounded-lg object-cover"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    href={msg.file_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={cn(
-                                      "mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
-                                      isMe
-                                        ? "border-white/20 bg-white/10 text-white"
-                                        : "border-line bg-brand-50 text-brand-800"
-                                    )}
-                                  >
-                                    {getFileIcon(msg.file_name)}
-                                    <span className="truncate">{msg.file_name ?? "File"}</span>
-                                  </a>
-                                )
-                              )}
-                              <p className={cn("mt-1 text-right text-[10px]", isMe ? "text-white/60" : "text-ink-3")}>
-                                {timeAgo(msg.created_at)}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div ref={bottomRef} />
-                    </div>
-                    {messages.length > 5 && (
-                      <button
-                        onClick={scrollToBottom}
-                        className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50"
-                      >
-                        <ChevronDown size={16} />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* input */}
-                  <div className="border-t border-line bg-white px-4 py-3">
-                    {selectedFile && (
-                      <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-2">
-                        {getFileIcon(selectedFile.name)}
-                        <span className="flex-1 truncate text-xs text-ink">{selectedFile.name}</span>
-                        <span className="text-xs text-ink-3">{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</span>
-                        <button onClick={() => setSelectedFile(null)} className="text-ink-3 hover:text-ink">
-                          <X size={14} />
-                        </button>
+                        })}
+                        <div ref={bottomRef} />
                       </div>
-                    )}
-                    <form
-                      action={async (fd) => {
-                        if (selectedFile) fd.set("file", selectedFile);
-                        await sendAction(fd);
-                        setSelectedFile(null);
-                      }}
-                      className="flex items-end gap-2"
-                    >
-                      <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5">
-                        <input
-                          name="body"
-                          placeholder="Type a message..."
-                          className="flex-1 bg-transparent text-sm outline-none"
-                          autoComplete="off"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-ink-3 hover:text-brand-600"
+                      {messages.length > 5 && (
+                        <button onClick={scrollToBottom}
+                          className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50"
                         >
-                          <Paperclip size={18} />
+                          <ChevronDown size={16} />
                         </button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (!f) return;
-                            if (f.size > 26214400) { alert("File must be under 25 MB"); return; }
-                            setSelectedFile(f);
-                          }}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={sending}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-400 disabled:opacity-50"
+                      )}
+                    </div>
+
+                    <div className="border-t border-line bg-white px-4 py-3">
+                      {selectedFile && (
+                        <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-2">
+                          {getFileIcon(selectedFile.name)}
+                          <span className="flex-1 truncate text-xs text-ink">{selectedFile.name}</span>
+                          <span className="text-xs text-ink-3">{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</span>
+                          <button onClick={() => setSelectedFile(null)} className="text-ink-3 hover:text-ink"><X size={14} /></button>
+                        </div>
+                      )}
+                      <form
+                        action={async (fd) => {
+                          if (selectedFile) fd.set("file", selectedFile);
+                          await sendAction(fd);
+                          setSelectedFile(null);
+                        }}
+                        className="flex items-end gap-2"
                       >
-                        <Send size={16} />
-                      </button>
-                    </form>
-                    {msgState.error && <p className="mt-1 text-xs text-red-500">{msgState.error}</p>}
-                  </div>
-                </>
-              ) : (
-                /* pending / rejected */
-                <div className="flex-1 overflow-y-auto px-8 py-8">
-                  {isReceived(selectedApp) && applicantProfile ? (
-                    <div className="mx-auto max-w-md">
-                      <div className="rounded-xl border border-line bg-white p-6">
-                        <div className="flex flex-col items-center text-center">
-                          <Avatar name={applicantProfile.full_name} size={72} />
-                          <h2 className="mt-4 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
-                          <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
-                          <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
+                        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5">
+                          <input name="body" placeholder="Type a message..." className="flex-1 bg-transparent text-sm outline-none" autoComplete="off" />
+                          <button type="button" onClick={() => fileInputRef.current?.click()} className="text-ink-3 hover:text-brand-600">
+                            <Paperclip size={18} />
+                          </button>
+                          <input ref={fileInputRef} type="file" className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (f.size > 26214400) { alert("File must be under 25 MB"); return; }
+                              setSelectedFile(f);
+                            }}
+                          />
                         </div>
-                        {applicantProfile.skills && applicantProfile.skills.length > 0 && (
-                          <div className="mt-5 flex flex-wrap justify-center gap-2">
-                            {applicantProfile.skills.map((s: string) => (
-                              <span key={s} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{s}</span>
-                            ))}
+                        <button type="submit" disabled={sending}
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-400 disabled:opacity-50"
+                        >
+                          <Send size={16} />
+                        </button>
+                      </form>
+                      {msgState.error && <p className="mt-1 text-xs text-red-500">{msgState.error}</p>}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 overflow-y-auto px-4 py-6">
+                    {isReceived(selectedApp) && applicantProfile ? (
+                      <div className="mx-auto max-w-md">
+                        <div className="rounded-xl border border-line bg-white p-6">
+                          <div className="flex flex-col items-center text-center">
+                            <Avatar name={applicantProfile.full_name} size={72} />
+                            <h2 className="mt-4 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
+                            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+                            <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
                           </div>
-                        )}
-                        {selectedApp.message && (
-                          <div className="mt-5 rounded-lg bg-brand-50 p-4">
-                            <p className="mb-1 text-xs font-medium text-ink-3">Why they are a fit</p>
-                            <p className="text-sm text-ink">{selectedApp.message}</p>
-                          </div>
-                        )}
-                        <div className="mt-5 flex justify-center gap-3">
-                          {applicantProfile.linkedin_url && (
-                            <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={linkBtnCls}>
-                              <Linkedin size={15} /> LinkedIn
-                            </a>
+                          {applicantProfile.skills && applicantProfile.skills.length > 0 && (
+                            <div className="mt-5 flex flex-wrap justify-center gap-2">
+                              {applicantProfile.skills.map((s) => (
+                                <span key={s} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{s}</span>
+                              ))}
+                            </div>
                           )}
-                          <a href={"mailto:" + applicantProfile.email} className={linkBtnCls}>
-                            <Mail size={15} /> Email
-                          </a>
-                        </div>
-                        {selectedApp.status === "pending" && (
-                          <div className="mt-6 flex gap-3 border-t border-line pt-5">
-                            <button
-                              onClick={() => startTransition(() =>
-                                updateApplicationStatus(selectedApp.id, "accepted").then(() => router.refresh())
-                              )}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-400"
-                            >
-                              <Check size={16} /> Accept
-                            </button>
-                            <button
-                              onClick={() => startTransition(() =>
-                                updateApplicationStatus(selectedApp.id, "rejected").then(() => router.refresh())
-                              )}
-                              className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line py-2.5 text-sm font-medium text-ink-2 hover:bg-brand-50"
-                            >
-                              <XCircle size={16} /> Reject
-                            </button>
+                          {selectedApp.message && (
+                            <div className="mt-5 rounded-lg bg-brand-50 p-4">
+                              <p className="mb-1 text-xs font-medium text-ink-3">Why they are a fit</p>
+                              <p className="text-sm text-ink">{selectedApp.message}</p>
+                            </div>
+                          )}
+                          <div className="mt-5 flex justify-center gap-3">
+                            {applicantProfile.linkedin_url && (
+                              <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={linkBtnCls}>
+                                <Linkedin size={15} /> LinkedIn
+                              </a>
+                            )}
+                            <a href={"mailto:" + applicantProfile.email} className={linkBtnCls}>
+                              <Mail size={15} /> Email
+                            </a>
                           </div>
-                        )}
-                        {selectedApp.status === "rejected" && (
-                          <div className="mt-5 flex justify-center">
-                            <span className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-medium text-red-700">
-                              Application rejected
+                          {selectedApp.status === "pending" && (
+                            <div className="mt-6 flex gap-3 border-t border-line pt-5">
+                              <button
+                                onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "accepted").then(() => router.refresh()))}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-400"
+                              >
+                                <Check size={16} /> Accept
+                              </button>
+                              <button
+                                onClick={() => startTransition(() => updateApplicationStatus(selectedApp.id, "rejected").then(() => router.refresh()))}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line py-2.5 text-sm font-medium text-ink-2 hover:bg-brand-50"
+                              >
+                                <XCircle size={16} /> Reject
+                              </button>
+                            </div>
+                          )}
+                          {selectedApp.status === "rejected" && (
+                            <div className="mt-5 flex justify-center">
+                              <span className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-medium text-red-700">Application rejected</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : ventureDetails ? (
+                      <div className="mx-auto max-w-md">
+                        <div className="rounded-xl border border-line bg-white p-6">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
+                              <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
+                            </div>
+                            <StageBadge stage={ventureDetails.stage} />
+                          </div>
+                          <div className="mt-4 rounded-lg bg-brand-50 p-4">
+                            <p className="mb-1 text-xs font-medium text-ink-3">Your application</p>
+                            <p className="text-sm text-ink">Applied as <span className="font-medium">{selectedApp.role}</span></p>
+                            {selectedApp.message && <p className="mt-2 text-sm text-ink-2">{selectedApp.message}</p>}
+                          </div>
+                          <div className="mt-4 flex justify-center">
+                            <span className={cn("rounded-full px-4 py-1.5 text-sm font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
+                              {selectedApp.status === "pending" ? "Waiting for response" : selectedApp.status}
                             </span>
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  ) : ventureDetails ? (
-                    <div className="mx-auto max-w-md">
-                      <div className="rounded-xl border border-line bg-white p-6">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
-                            <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+
+              {/* Pane 4 - hidden on mobile */}
+              {showProfile && selectedApp.status === "accepted" && (
+                <div className="hidden lg:flex w-72 shrink-0 flex-col overflow-y-auto border-l border-line bg-white px-5 py-6">
+                  {isReceived(selectedApp) && applicantProfile ? (
+                    <>
+                      <div className="flex flex-col items-center text-center">
+                        <Avatar name={applicantProfile.full_name} size={64} />
+                        <h3 className="mt-3 text-base font-semibold text-ink">{applicantProfile.full_name}</h3>
+                        <p className="text-xs text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+                      </div>
+                      {applicantProfile.skills && applicantProfile.skills.length > 0 && (
+                        <div className="mt-4">
+                          <p className="mb-2 text-xs font-medium text-ink-3">Skills</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {applicantProfile.skills.map((s) => (
+                              <span key={s} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800">{s}</span>
+                            ))}
                           </div>
-                          <StageBadge stage={ventureDetails.stage as any} />
                         </div>
-                        <div className="mt-4 rounded-lg bg-brand-50 p-4">
-                          <p className="mb-1 text-xs font-medium text-ink-3">Your application</p>
-                          <p className="text-sm text-ink">Applied as <span className="font-medium">{selectedApp.role}</span></p>
-                          {selectedApp.message && (
-                            <p className="mt-2 text-sm text-ink-2">{selectedApp.message}</p>
-                          )}
-                        </div>
-                        <div className="mt-4 flex justify-center">
-                          <span className={cn("rounded-full px-4 py-1.5 text-sm font-medium", APPLICATION_STATUS_STYLES[selectedApp.status])}>
-                            {selectedApp.status === "pending" ? "Waiting for response" : selectedApp.status}
-                          </span>
-                        </div>
+                      )}
+                      <div className="mt-4 flex flex-col gap-2">
+                        {applicantProfile.linkedin_url && (
+                          <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={panelLinkCls}>
+                            <Linkedin size={15} /> LinkedIn
+                          </a>
+                        )}
+                        <a href={"mailto:" + applicantProfile.email} className={panelLinkCls}>
+                          <Mail size={15} /> {applicantProfile.email}
+                        </a>
                       </div>
-                    </div>
+                    </>
+                  ) : ventureDetails ? (
+                    <>
+                      <h3 className="text-base font-semibold text-ink">{ventureDetails.title}</h3>
+                      <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
+                      <div className="mt-3"><StageBadge stage={ventureDetails.stage} /></div>
+                    </>
                   ) : null}
                 </div>
               )}
             </div>
-
-            {/* Pane 4 */}
-            {showProfile && selectedApp.status === "accepted" && (
-              <div className="w-72 shrink-0 overflow-y-auto border-l border-line bg-white px-5 py-6">
-                {isReceived(selectedApp) && applicantProfile ? (
-                  <>
-                    <div className="flex flex-col items-center text-center">
-                      <Avatar name={applicantProfile.full_name} size={64} />
-                      <h3 className="mt-3 text-base font-semibold text-ink">{applicantProfile.full_name}</h3>
-                      <p className="text-xs text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
-                    </div>
-                    {applicantProfile.skills && applicantProfile.skills.length > 0 && (
-                      <div className="mt-4">
-                        <p className="mb-2 text-xs font-medium text-ink-3">Skills</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {applicantProfile.skills.map((s: string) => (
-                            <span key={s} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs text-brand-800">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="mt-4 flex flex-col gap-2">
-                      {applicantProfile.linkedin_url && (
-                        <a href={applicantProfile.linkedin_url} target="_blank" rel="noreferrer" className={panelLinkCls}>
-                          <Linkedin size={15} /> LinkedIn
-                        </a>
-                      )}
-                      <a href={"mailto:" + applicantProfile.email} className={panelLinkCls}>
-                        <Mail size={15} /> {applicantProfile.email}
-                      </a>
-                    </div>
-                  </>
-                ) : ventureDetails ? (
-                  <>
-                    <h3 className="text-base font-semibold text-ink">{ventureDetails.title}</h3>
-                    <p className="mt-1 text-sm text-ink-2">{ventureDetails.one_liner}</p>
-                    <div className="mt-3"><StageBadge stage={ventureDetails.stage as any} /></div>
-                  </>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

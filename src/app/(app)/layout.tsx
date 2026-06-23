@@ -2,11 +2,11 @@
 import { Sidebar } from "@/components/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let name: string | null = null;
+  let name = null;
   if (user) {
     const { data } = await supabase
       .from("profiles")
@@ -19,7 +19,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <Sidebar name={name} isAuthed={!!user} userId={user?.id} />
-      <main className="flex-1 px-7 py-7">{children}</main>
+      {/* pt-14 on mobile for fixed top bar, pb-16 for fixed bottom nav */}
+      <main className="flex-1 px-4 py-4 pt-16 pb-20 lg:px-7 lg:py-7 lg:pt-7 lg:pb-7">
+        {children}
+      </main>
     </div>
   );
 }
