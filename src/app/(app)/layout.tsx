@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 export default async function AppLayout({ children }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   let name = null;
   if (user) {
     const { data } = await supabase
@@ -15,12 +14,10 @@ export default async function AppLayout({ children }) {
       .single();
     name = data?.full_name ?? null;
   }
-
   return (
     <div className="flex min-h-screen">
       <Sidebar name={name} isAuthed={!!user} userId={user?.id} />
-      {/* pt-14 on mobile for fixed top bar, pb-16 for fixed bottom nav */}
-      <main className="flex-1 px-4 py-4 pt-16 pb-20 lg:px-7 lg:py-7 lg:pt-7 lg:pb-7">
+      <main className="flex-1 min-w-0 px-4 py-4 pt-16 pb-20 lg:px-7 lg:py-7 lg:pt-7 lg:pb-7">
         {children}
       </main>
     </div>

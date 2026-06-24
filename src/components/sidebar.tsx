@@ -188,7 +188,7 @@ export function Sidebar({ name, isAuthed, userId }) {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between bg-sidebar px-4 lg:hidden">
+      <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between bg-sidebar px-4 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-semibold text-white">
             N
@@ -223,7 +223,7 @@ export function Sidebar({ name, isAuthed, userId }) {
       )}
 
       {/* Mobile bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-white/10 bg-sidebar px-2 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-white/10 bg-sidebar px-2 lg:hidden">
         <Link href="/feed" className={cn("flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition", path === "/feed" ? "text-white" : "text-white/50")}>
           <Home size={20} />
           <span className="text-[10px]">Feed</span>
