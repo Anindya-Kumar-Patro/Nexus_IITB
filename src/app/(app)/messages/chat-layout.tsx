@@ -39,7 +39,6 @@ export function ChatLayout({
   const router = useRouter();
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
-  // "list" | "chat" | "profile"
   const [mobileView, setMobileView] = useState(selectedAppId ? "chat" : "list");
   const [showProfile, setShowProfile] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
@@ -125,7 +124,6 @@ export function ChatLayout({
   const linkBtnCls = "flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-ink-2 hover:bg-brand-50";
   const panelLinkCls = "flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-2 hover:bg-brand-50";
 
-  // Profile content — reused in both mobile full-screen and desktop pane 4
   const ProfileContent = () => (
     <>
       {isReceived(selectedApp) && applicantProfile ? (
@@ -167,12 +165,11 @@ export function ChatLayout({
     </>
   );
 
-  // Pending/rejected center content
   const PendingContent = () => (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
+    <div className="flex-1 overflow-y-auto px-4 py-6">
       {isReceived(selectedApp) && applicantProfile ? (
         <div className="mx-auto max-w-md">
-          <div className="rounded-xl border border-line bg-white p-5 sm:p-6">
+          <div className="rounded-xl border border-line bg-white p-5">
             <div className="flex flex-col items-center text-center">
               <Avatar name={applicantProfile.full_name} size={64} />
               <h2 className="mt-3 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
@@ -227,7 +224,7 @@ export function ChatLayout({
         </div>
       ) : ventureDetails ? (
         <div className="mx-auto max-w-md">
-          <div className="rounded-xl border border-line bg-white p-5 sm:p-6">
+          <div className="rounded-xl border border-line bg-white p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
@@ -254,11 +251,12 @@ export function ChatLayout({
   return (
     <div className="flex overflow-hidden -mx-7 -my-7" style={{ height: "100vh" }}>
 
-      {/* ─── MOBILE PROFILE VIEW (full screen) ─── */}
+      {/* Mobile profile full screen */}
       {mobileView === "profile" && selectedApp && (
         <div className="flex flex-1 flex-col lg:hidden">
           <div className="flex items-center gap-3 border-b border-line bg-white px-4 py-3">
-            <button onClick={() => setMobileView("chat")} className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3">
+            <button onClick={() => setMobileView("chat")}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-3">
               <ArrowLeft size={16} />
             </button>
             <p className="text-sm font-semibold text-ink">
@@ -271,16 +269,42 @@ export function ChatLayout({
         </div>
       )}
 
-      {/* ─── PANE 2 — list ─── */}
+      {/* Pane 2 - list */}
       <div className={cn(
         "flex flex-col border-r border-line bg-white",
         "w-full lg:w-72 lg:shrink-0 lg:flex",
         mobileView === "list" ? "flex" : "hidden lg:flex"
       )}>
-        <div className="border-b border-line px-4 py-4">
-          <h2 className="text-base font-semibold text-ink">{tab === "applied" ? "Applied" : "Received"}</h2>
+        {/* Tab switcher - Applied / Received */}
+        <div className="flex border-b border-line">
+          <button
+            onClick={() => router.push("/messages?tab=applied")}
+            className={cn(
+              "flex-1 py-3 text-sm font-medium transition border-b-2",
+              tab === "applied"
+                ? "border-brand-600 text-brand-800"
+                : "border-transparent text-ink-3 hover:text-ink"
+            )}
+          >
+            Applied
+          </button>
+          <button
+            onClick={() => router.push("/messages?tab=received")}
+            className={cn(
+              "flex-1 py-3 text-sm font-medium transition border-b-2",
+              tab === "received"
+                ? "border-brand-600 text-brand-800"
+                : "border-transparent text-ink-3 hover:text-ink"
+            )}
+          >
+            Received
+          </button>
+        </div>
+
+        <div className="border-b border-line px-4 py-2">
           <p className="text-xs text-ink-3">{applications.length} application{applications.length !== 1 ? "s" : ""}</p>
         </div>
+
         <div className="flex-1 overflow-y-auto">
           {sortedApps.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -331,7 +355,7 @@ export function ChatLayout({
         </div>
       </div>
 
-      {/* ─── PANE 3 — chat / pending / rejected ─── */}
+      {/* Pane 3 - chat */}
       <div className={cn(
         "flex flex-1 flex-col overflow-hidden",
         mobileView === "chat" ? "flex" : "hidden lg:flex",
@@ -347,8 +371,7 @@ export function ChatLayout({
         ) : (
           <>
             {/* topbar */}
-            <div className="flex items-center gap-2 border-b border-line bg-white px-3 sm:px-5 py-3">
-              {/* mobile back to list */}
+            <div className="flex shrink-0 items-center gap-2 border-b border-line bg-white px-3 py-3">
               <button
                 onClick={() => { setMobileView("list"); router.push("/messages?tab=" + tab); }}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink-3 lg:hidden"
@@ -356,16 +379,15 @@ export function ChatLayout({
                 <ArrowLeft size={16} />
               </button>
 
-              {/* tap to open profile — mobile goes full screen, desktop toggles pane 4 */}
               <button
                 onClick={() => {
-                  if (window.innerWidth < 1024) {
+                  if (typeof window !== "undefined" && window.innerWidth < 1024) {
                     setMobileView("profile");
                   } else {
                     setShowProfile(!showProfile);
                   }
                 }}
-                className="flex flex-1 min-w-0 items-center gap-2 sm:gap-3"
+                className="flex flex-1 min-w-0 items-center gap-2"
               >
                 <Avatar name={isReceived(selectedApp) ? applicantProfile?.full_name : ventureDetails?.title} size={34} />
                 <div className="min-w-0 text-left">
@@ -409,8 +431,8 @@ export function ChatLayout({
               )}
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
-              <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 overflow-hidden min-h-0">
+              <div className="flex flex-1 flex-col min-h-0">
                 {settings.blocked ? (
                   <div className="flex flex-1 items-center justify-center">
                     <div className="text-center">
@@ -424,8 +446,9 @@ export function ChatLayout({
                   </div>
                 ) : selectedApp.status === "accepted" && conversationId ? (
                   <>
-                    <div className="relative flex-1 overflow-y-auto px-3 sm:px-5 py-4">
-                      <div className="flex flex-col gap-3">
+                    {/* messages - scrollable */}
+                    <div className="flex-1 overflow-y-auto px-3 py-4 min-h-0">
+                      <div className="flex flex-col gap-2">
                         {messages.length === 0 && (
                           <p className="py-8 text-center text-sm text-ink-3">No messages yet. Say hello!</p>
                         )}
@@ -433,9 +456,9 @@ export function ChatLayout({
                           const isMe = msg.sender_id === currentUser.id;
                           if (isSystemMessage(msg, index)) {
                             return (
-                              <div key={msg.id} className="flex justify-center py-2">
-                                <div className="flex max-w-[90%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-xs text-ink-2">
-                                  <Info size={13} className="mt-0.5 shrink-0 text-brand-600" />
+                              <div key={msg.id} className="flex justify-center py-1">
+                                <div className="flex max-w-[90%] items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-xs text-ink-2">
+                                  <Info size={12} className="mt-0.5 shrink-0 text-brand-600" />
                                   <p className="leading-relaxed">{msg.body}</p>
                                 </div>
                               </div>
@@ -444,18 +467,20 @@ export function ChatLayout({
                           return (
                             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
                               <div className={cn(
-                                "max-w-[80%] rounded-2xl px-3 sm:px-4 py-2.5 text-sm",
-                                isMe ? "rounded-tr-sm bg-brand-600 text-white" : "rounded-tl-sm border border-line bg-white text-ink"
+                                "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
+                                isMe
+                                  ? "rounded-tr-sm bg-brand-600 text-white"
+                                  : "rounded-tl-sm border border-line bg-white text-ink"
                               )}>
-                                {msg.body && <p className="leading-relaxed">{msg.body}</p>}
+                                {msg.body && <p>{msg.body}</p>}
                                 {msg.file_url && (
                                   isImageFile(msg.file_name) ? (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-2 max-h-48 w-full rounded-lg object-cover" />
+                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-1.5 max-h-40 rounded-lg object-cover" />
                                     </a>
                                   ) : (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer"
-                                      className={cn("mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
+                                      className={cn("mt-1.5 flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
                                         isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800"
                                       )}>
                                       {getFileIcon(msg.file_name)}
@@ -463,7 +488,7 @@ export function ChatLayout({
                                     </a>
                                   )
                                 )}
-                                <p className={cn("mt-1 text-right text-[10px]", isMe ? "text-white/60" : "text-ink-3")}>
+                                <p className={cn("mt-0.5 text-right text-[10px]", isMe ? "text-white/60" : "text-ink-3")}>
                                   {timeAgo(msg.created_at)}
                                 </p>
                               </div>
@@ -474,25 +499,28 @@ export function ChatLayout({
                       </div>
                       {messages.length > 5 && (
                         <button onClick={scrollToBottom}
-                          className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50">
+                          className="sticky bottom-2 float-right flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-brand-50">
                           <ChevronDown size={16} />
                         </button>
                       )}
                     </div>
-                    <div className="border-t border-line bg-white px-3 sm:px-4 py-3">
+
+                    {/* input - fixed at bottom */}
+                    <div className="shrink-0 border-t border-line bg-white px-3 py-2">
                       {selectedFile && (
-                        <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-2">
+                        <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-1.5">
                           {getFileIcon(selectedFile.name)}
                           <span className="flex-1 truncate text-xs text-ink">{selectedFile.name}</span>
                           <span className="text-xs text-ink-3">{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</span>
-                          <button onClick={() => setSelectedFile(null)} className="text-ink-3 hover:text-ink"><X size={14} /></button>
+                          <button onClick={() => setSelectedFile(null)} className="text-ink-3"><X size={13} /></button>
                         </div>
                       )}
-                      <form action={async (fd) => { if (selectedFile) fd.set("file", selectedFile); await sendAction(fd); setSelectedFile(null); }} className="flex items-end gap-2">
-                        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3 sm:px-4 py-2.5">
+                      <form action={async (fd) => { if (selectedFile) fd.set("file", selectedFile); await sendAction(fd); setSelectedFile(null); }}
+                        className="flex items-center gap-2">
+                        <div className="flex flex-1 items-center gap-2 rounded-full border border-line bg-white px-4 py-2">
                           <input name="body" placeholder="Type a message..." className="flex-1 bg-transparent text-sm outline-none" autoComplete="off" />
-                          <button type="button" onClick={() => fileInputRef.current?.click()} className="text-ink-3 hover:text-brand-600">
-                            <Paperclip size={18} />
+                          <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 text-ink-3 hover:text-brand-600">
+                            <Paperclip size={17} />
                           </button>
                           <input ref={fileInputRef} type="file" className="hidden"
                             onChange={(e) => {
@@ -503,8 +531,8 @@ export function ChatLayout({
                             }} />
                         </div>
                         <button type="submit" disabled={sending}
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-400 disabled:opacity-50">
-                          <Send size={16} />
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white disabled:opacity-50">
+                          <Send size={15} />
                         </button>
                       </form>
                       {msgState.error && <p className="mt-1 text-xs text-red-500">{msgState.error}</p>}
@@ -513,7 +541,7 @@ export function ChatLayout({
                 ) : <PendingContent />}
               </div>
 
-              {/* ─── PANE 4 — desktop only ─── */}
+              {/* Pane 4 - desktop only */}
               {showProfile && selectedApp.status === "accepted" && (
                 <div className="hidden lg:flex w-72 shrink-0 flex-col overflow-y-auto border-l border-line bg-white px-5 py-6">
                   <ProfileContent />

@@ -241,7 +241,7 @@ export function Sidebar({ name, isAuthed, userId }) {
         )}
         {isAuthed ? (
           <>
-            <Link href="/messages?tab=applied" className={cn("relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition", path === "/messages" ? "text-white" : "text-white/50")}>
+            <Link href="/messages" className={cn("relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition", path === "/messages" ? "text-white" : "text-white/50")}>
               <Send size={20} />
               <span className="text-[10px]">Messages</span>
               {(appliedDot || receivedDot) && (
