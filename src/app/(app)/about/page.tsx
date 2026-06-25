@@ -1,20 +1,30 @@
 // @ts-nocheck
 import { Topbar } from "@/components/topbar";
-import { Mail } from "lucide-react";
-import { Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
+import { Mail, Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
+
+const FEATURES = [
+  { icon: Rocket, title: "Post ventures", desc: "Share your idea with the campus" },
+  { icon: Users, title: "Find co-founders", desc: "Connect with the right people" },
+  { icon: Search, title: "Discover talent", desc: "Browse by skill and department" },
+  { icon: MessageCircle, title: "Chat directly", desc: "Realtime messaging built in" },
+  { icon: Bookmark, title: "Save ideas", desc: "Bookmark ventures you love" },
+];
 
 export default function AboutPage() {
   return (
     <div>
       <Topbar title="About" />
 
-      {/* equal height grid - stretch makes both cards same height */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ alignItems: "stretch" }}>
 
-        {/* left card */}
-        <div style={{ display: "flex", flexDirection: "column" }} className="rounded-xl border border-line bg-white p-7">
+        {/* LEFT — About Nexus */}
+        <div style={{ display: "flex", flexDirection: "column" }}
+          className="rounded-xl border border-line bg-white p-7">
+
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-base font-bold text-white">N</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-base font-bold text-white">
+              N
+            </div>
             <div>
               <h2 className="text-lg font-semibold text-ink">Nexus IITB</h2>
               <p className="text-xs text-ink-3">The startup network for IIT Bombay</p>
@@ -22,49 +32,53 @@ export default function AboutPage() {
           </div>
 
           <p className="text-sm leading-relaxed text-ink">
-            I built Nexus because I kept seeing the same problem around me people at IITB with incredible ideas
+            I built Nexus because I kept seeing the same problem around me. People at IITB with incredible ideas
             who could not find the right people to build with. A CS student with a fintech idea looking for someone
             who understands business. A designer with a product vision needing a developer. Everyone operating in
             their own circles, missing each other.
           </p>
 
           <p className="mt-3 text-sm leading-relaxed text-ink">
-            Nexus is my attempt to fix that. It is a private platform, locked to IITB email addresses, where
+            Nexus is my attempt to fix that. It is a private platform locked to IITB email addresses, where
             students and faculty can post venture ideas, find co-founders, apply to join early-stage startups,
-            and talk to each other directly all in one place.
+            and talk to each other directly, all in one place.
           </p>
 
           <div className="mt-6 grid grid-cols-2 gap-2">
-            {[
-              { icon: Rocket, title: "Post ventures", desc: "Share your idea with the campus" },
-              { icon: Users, title: "Find co-founders", desc: "Connect with the right people" },
-              { icon: Search, title: "Discover talent", desc: "Browse by skill and department" },
-              { icon: MessageCircle, title: "Chat directly", desc: "Realtime messaging built in" },
-              { icon: Bookmark, title: "Save ideas", desc: "Bookmark ventures you love" },
-            ].map((f) => (
+            {FEATURES.map((f) => (
               <div key={f.title} className="flex gap-2 rounded-lg border border-line p-2.5">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                   <f.icon size={14} />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-ink leading-tight">{f.title}</p>
+                  <p className="text-xs font-medium leading-tight text-ink">{f.title}</p>
                   <p className="text-[11px] text-ink-3">{f.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ marginTop: "auto", paddingTop: "20px" }} className="rounded-lg bg-brand-50 px-4 py-3">
+          {/* spacer pushes restriction note to bottom */}
+          <div style={{ flex: 1, minHeight: "24px" }} />
+
+          <div className="rounded-lg bg-brand-50 px-4 py-3">
             <p className="text-xs text-ink-3">
-              Restricted to <span className="font-medium text-brand-800">@iitb.ac.in</span> email addresses only.
+              Restricted to{" "}
+              <span className="font-medium text-brand-800">@iitb.ac.in</span>{" "}
+              email addresses only.
             </p>
           </div>
+
         </div>
 
-        {/* right card */}
-        <div style={{ display: "flex", flexDirection: "column" }} className="rounded-xl border border-line bg-white p-7">
+        {/* RIGHT — About Founder */}
+        <div style={{ display: "flex", flexDirection: "column" }}
+          className="rounded-xl border border-line bg-white p-7">
+
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">AP</div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
+              AP
+            </div>
             <div>
               <h2 className="text-lg font-semibold text-ink">Anindya Kumar Patro</h2>
               <p className="text-xs text-ink-3">MBA · SJMSOM, IIT Bombay · 25M2362</p>
@@ -72,7 +86,7 @@ export default function AboutPage() {
           </div>
 
           <p className="text-sm leading-relaxed text-ink">
-            I am an MBA student at SJMSOM, IIT Bombay, and I built Nexus from scratch design, backend,
+            I am an MBA student at SJMSOM, IIT Bombay, and I built Nexus from scratch. Design, backend,
             frontend, everything. No team, no funding, just a problem I genuinely wanted to solve for
             the campus I am part of.
           </p>
@@ -80,22 +94,25 @@ export default function AboutPage() {
           <p className="mt-3 text-sm leading-relaxed text-ink">
             I come from a background that sits at the intersection of management and technology, which
             is exactly why I felt this gap so personally. I wanted to build something that would outlast
-            my time here a permanent layer of infrastructure for every IITB student who has an idea
+            my time here. A permanent layer of infrastructure for every IITB student who has an idea
             and needs the right person to build it with.
           </p>
 
           <p className="mt-3 text-sm leading-relaxed text-ink">
-            If you have feedback, want to collaborate, or just want to say hi I would love to hear
-            from you. Nexus is for this community, and I want to keep making it better for it.
+            If you have feedback, want to collaborate, or just want to say hi, I would love to hear
+            from you. Nexus is for this community and I want to keep making it better for it.
           </p>
 
           <p className="mt-3 text-sm leading-relaxed text-ink">
             Building Nexus has been one of the most fulfilling things I have done at IIT Bombay.
-            Every feature you see here was designed with one question in mind what would actually
+            Every feature you see here was designed with one question in mind. What would actually
             make it easier for two people on this campus to find each other and build something great?
           </p>
 
-          <div style={{ marginTop: "auto" }} className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
+          {/* spacer pushes contact buttons to bottom */}
+          <div style={{ flex: 1, minHeight: "24px" }} />
+
+          <div className="flex flex-wrap gap-2 border-t border-line pt-5">
             <a
               href="https://www.linkedin.com/in/anindya-kumar-patro/"
               target="_blank"
@@ -125,8 +142,8 @@ export default function AboutPage() {
               <Mail size={14} /> Email me
             </a>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
   );
