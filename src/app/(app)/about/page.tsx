@@ -1,16 +1,18 @@
 // @ts-nocheck
 import { Topbar } from "@/components/topbar";
-import { Linkedin, Instagram, Mail, Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
+import { Mail } from "lucide-react";
+import { Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
 
 export default function AboutPage() {
   return (
     <div className="max-w-4xl">
       <Topbar title="About" />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+      {/* equal height grid - stretch makes both cards same height */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ alignItems: "stretch" }}>
 
-        {/* left — about nexus */}
-        <div className="flex flex-col rounded-xl border border-line bg-white p-7">
+        {/* left card */}
+        <div style={{ display: "flex", flexDirection: "column" }} className="rounded-xl border border-line bg-white p-7">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-base font-bold text-white">N</div>
             <div>
@@ -52,15 +54,15 @@ export default function AboutPage() {
             ))}
           </div>
 
-          <div className="mt-5 rounded-lg bg-brand-50 px-4 py-3">
+          <div style={{ marginTop: "auto" }} className="mt-5 rounded-lg bg-brand-50 px-4 py-3">
             <p className="text-xs text-ink-3">
               Restricted to <span className="font-medium text-brand-800">@iitb.ac.in</span> email addresses only.
             </p>
           </div>
         </div>
 
-        {/* right — about founder */}
-        <div className="flex flex-col rounded-xl border border-line bg-white p-7">
+        {/* right card */}
+        <div style={{ display: "flex", flexDirection: "column" }} className="rounded-xl border border-line bg-white p-7">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">AP</div>
             <div>
@@ -87,7 +89,13 @@ export default function AboutPage() {
             from you. Nexus is for this community, and I want to keep making it better for it.
           </p>
 
-          <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-line">
+          <p className="mt-3 text-sm leading-relaxed text-ink">
+            Building Nexus has been one of the most fulfilling things I have done at IIT Bombay.
+            Every feature you see here was designed with one question in mind — what would actually
+            make it easier for two people on this campus to find each other and build something great?
+          </p>
+
+          <div style={{ marginTop: "auto" }} className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
             <a
               href="https://www.linkedin.com/in/anindya-kumar-patro/"
               target="_blank"
