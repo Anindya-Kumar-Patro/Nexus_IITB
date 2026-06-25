@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Topbar } from "@/components/topbar";
 import { VentureCard } from "@/components/venture-card";
 import { EmptyState } from "@/components/empty-state";
+import { Footer } from "@/components/footer";
 import { FeedFilters } from "./feed-filters";
 import { ArrowRight, Rocket } from "lucide-react";
 
@@ -200,6 +201,7 @@ export default async function FeedPage({ searchParams }) {
           ))}
         </div>
       )}
+    <Footer />
     </div>
   );
 }

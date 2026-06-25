@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Topbar } from "@/components/topbar";
 import { Avatar } from "@/components/avatar";
 import { EmptyState } from "@/components/empty-state";
+import { Footer } from "@/components/footer";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,7 @@ export default async function PeoplePage() {
           ))}
         </div>
       )}
+    <Footer />
     </div>
   );
 }
