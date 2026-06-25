@@ -5,7 +5,7 @@ import { Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
 
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl">
+    <div>
       <Topbar title="About" />
 
       {/* equal height grid - stretch makes both cards same height */}
