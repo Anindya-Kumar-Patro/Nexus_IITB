@@ -54,7 +54,7 @@ export default function AboutPage() {
             ))}
           </div>
 
-          <div style={{ marginTop: "auto" }} className="mt-8 rounded-lg bg-brand-50 px-4 py-3">
+          <div style={{ marginTop: "auto", paddingTop: "20px" }} className="rounded-lg bg-brand-50 px-4 py-3">
             <p className="text-xs text-ink-3">
               Restricted to <span className="font-medium text-brand-800">@iitb.ac.in</span> email addresses only.
             </p>
