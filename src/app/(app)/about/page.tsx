@@ -7,10 +7,10 @@ export default function AboutPage() {
     <div className="max-w-4xl">
       <Topbar title="About" />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
 
         {/* left — about nexus */}
-        <div className="rounded-xl border border-line bg-white p-7">
+        <div className="flex flex-col rounded-xl border border-line bg-white p-7">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-base font-bold text-white">N</div>
             <div>
@@ -60,7 +60,7 @@ export default function AboutPage() {
         </div>
 
         {/* right — about founder */}
-        <div className="rounded-xl border border-line bg-white p-7">
+        <div className="flex flex-col rounded-xl border border-line bg-white p-7">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">AP</div>
             <div>
@@ -87,7 +87,7 @@ export default function AboutPage() {
             from you. Nexus is for this community, and I want to keep making it better for it.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
+          <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-line">
             <a
               href="https://www.linkedin.com/in/anindya-kumar-patro/"
               target="_blank"
