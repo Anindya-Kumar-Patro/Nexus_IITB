@@ -16,6 +16,30 @@ import { timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: venture } = await supabase
+    .from("ventures")
+    .select("title, one_liner, description")
+    .eq("id", id)
+    .single();
+
+  if (!venture) return { title: "Nexus IITB" };
+
+  return {
+    title: venture.title + " · Nexus IITB",
+    description: venture.one_liner ?? venture.description?.slice(0, 150) ?? "A venture on Nexus IITB",
+    openGraph: {
+      title: venture.title + " · Nexus IITB",
+      description: venture.one_liner ?? venture.description?.slice(0, 150) ?? "",
+      siteName: "Nexus IITB",
+    },
+  };
+}
+
+
+
 export default async function VentureDetail({ params }) {
   const { id } = await params;
   const supabase = await createClient();
