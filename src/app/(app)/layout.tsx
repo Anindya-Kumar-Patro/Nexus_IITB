@@ -19,8 +19,8 @@ export default async function AppLayout({ children }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar name={name} isAuthed={!!user} userId={user?.id} />
-      <div className="flex flex-1 min-w-0 flex-col h-full overflow-y-auto">
-        <main className="flex-1 px-4 py-4 pt-16 pb-4 lg:px-7 lg:py-7 lg:pt-7">
+      <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto px-4 py-4 pt-16 pb-4 lg:px-7 lg:py-7 lg:pt-7">
           {children}
         </main>
         <FooterConditional />
