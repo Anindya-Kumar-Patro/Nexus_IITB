@@ -183,7 +183,7 @@ export function Sidebar({ name, isAuthed, userId }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar p-5">
+      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-sidebar p-5 h-screen sticky top-0 overflow-hidden">
         <SidebarContent />
       </aside>
 
