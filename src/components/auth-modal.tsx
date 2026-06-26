@@ -48,7 +48,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
 
-        {mode === "signin" ? <SignInForm /> : <SignUpForm />}
+        {mode === "signin" ? <SignInForm /> : <SignUpForm onSwitchToSignIn={() => setMode("signin")} />}
       </div>
     </div>
   );
@@ -67,7 +67,9 @@ function SignInForm() {
         <Label>Password</Label>
         <Input name="password" type="password" required />
       </div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>
+      )}
       <Button type="submit" disabled={pending}>
         {pending ? "Signing in…" : "Sign in"}
       </Button>
@@ -75,7 +77,7 @@ function SignInForm() {
   );
 }
 
-function SignUpForm() {
+function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, {});
 
   if (state.sent) {
@@ -157,7 +159,17 @@ function SignUpForm() {
         <ChipSelect name="skills" options={SKILLS} />
       </div>
 
-      {state.error && <p className="text-sm text-red-600 sm:col-span-2">{state.error}</p>}
+      {state.error === "ALREADY_REGISTERED" ? (
+        <div className="rounded-lg bg-amber-50 px-4 py-3 sm:col-span-2">
+          <p className="text-sm font-medium text-amber-800">This email is already registered.</p>
+          <button type="button" onClick={onSwitchToSignIn}
+            className="mt-1 text-sm text-brand-600 underline hover:text-brand-800">
+            Sign in instead →
+          </button>
+        </div>
+      ) : state.error ? (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 sm:col-span-2">{state.error}</p>
+      ) : null}
       <Button type="submit" disabled={pending} className="justify-self-start sm:col-span-2">
         {pending ? "Creating account…" : "Create account"}
       </Button>

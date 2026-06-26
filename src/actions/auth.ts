@@ -1,22 +1,41 @@
 // @ts-nocheck
 "use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { isIitbEmail } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-export type AuthState = { error?: string; sent?: boolean };
+export type AuthState = { error?: string; sent?: boolean; switchToSignIn?: boolean };
+
+function friendlySignInError(msg: string): string {
+  if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials"))
+    return "Wrong email or password. Please try again.";
+  if (msg.includes("Email not confirmed"))
+    return "Please verify your email first. Check your IITB inbox for the confirmation link.";
+  if (msg.includes("Too many requests"))
+    return "Too many attempts. Please wait a few minutes and try again.";
+  return msg;
+}
+
+function friendlySignUpError(msg: string): string {
+  if (msg.includes("User already registered") || msg.includes("already been registered"))
+    return "ALREADY_REGISTERED";
+  if (msg.includes("Password should be at least"))
+    return "Password must be at least 6 characters.";
+  if (msg.includes("Unable to validate email"))
+    return "Please enter a valid email address.";
+  if (msg.includes("Too many requests"))
+    return "Too many attempts. Please wait a few minutes and try again.";
+  return msg;
+}
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
-
+  if (error) return { error: friendlySignInError(error.message) };
   revalidatePath("/", "layout");
   redirect("/feed");
 }
@@ -37,12 +56,11 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   }
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
   if (!full_name || !roll_number || !department || !role) {
-    return { error: "Name, roll / ID number, department and role are all required." };
+    return { error: "Name, roll number, department and role are all required." };
   }
 
   const supabase = await createClient();
   const origin = (await headers()).get("origin") ?? "";
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -52,9 +70,12 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     },
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    const friendly = friendlySignUpError(error.message);
+    if (friendly === "ALREADY_REGISTERED") return { error: "ALREADY_REGISTERED" };
+    return { error: friendly };
+  }
   if (!data.session) return { sent: true };
-
   revalidatePath("/", "layout");
   redirect("/feed");
 }
