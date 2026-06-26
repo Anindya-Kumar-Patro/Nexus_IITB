@@ -17,9 +17,9 @@ export default async function AppLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar name={name} isAuthed={!!user} userId={user?.id} />
-      <div className="flex flex-1 min-w-0 flex-col">
+      <div className="flex flex-1 min-w-0 flex-col h-full overflow-y-auto">
         <main className="flex-1 px-4 py-4 pt-16 pb-4 lg:px-7 lg:py-7 lg:pt-7">
           {children}
         </main>
