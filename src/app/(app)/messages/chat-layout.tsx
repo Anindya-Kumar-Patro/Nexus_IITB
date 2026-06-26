@@ -131,7 +131,7 @@ export function ChatLayout({
           <div className="flex flex-col items-center text-center">
             <Avatar name={applicantProfile.full_name} size={72} />
             <h3 className="mt-3 text-lg font-semibold text-ink">{applicantProfile.full_name}</h3>
-            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role === "both" ? "Founder & Builder" : applicantProfile.role}</p>
             <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
           </div>
           {applicantProfile.skills && applicantProfile.skills.length > 0 && (
@@ -173,7 +173,7 @@ export function ChatLayout({
             <div className="flex flex-col items-center text-center">
               <Avatar name={applicantProfile.full_name} size={64} />
               <h2 className="mt-3 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
-              <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role}</p>
+              <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role === "both" ? "Founder & Builder" : applicantProfile.role}</p>
               <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
             </div>
             {applicantProfile.skills && applicantProfile.skills.length > 0 && (
@@ -508,9 +508,9 @@ export function ChatLayout({
                     {/* input - fixed at bottom */}
                     <div className="shrink-0 border-t border-line bg-white px-3 py-2">
                       {selectedFile && (
-                        <div className="mb-2 flex items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-1.5">
+                        <div className="mb-2 flex w-full items-center gap-2 rounded-lg border border-line bg-brand-50 px-3 py-1.5 overflow-hidden">
                           {getFileIcon(selectedFile.name)}
-                          <span className="flex-1 truncate text-xs text-ink">{selectedFile.name}</span>
+                          <span className="min-w-0 flex-1 truncate text-xs text-ink">{selectedFile.name}</span>
                           <span className="text-xs text-ink-3">{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</span>
                           <button onClick={() => setSelectedFile(null)} className="text-ink-3"><X size={13} /></button>
                         </div>

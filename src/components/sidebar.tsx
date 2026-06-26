@@ -187,10 +187,10 @@ export function Sidebar({ name, isAuthed, userId }) {
 
       {/* Mobile top bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between bg-sidebar px-4 lg:hidden">
-        <div className="flex items-center gap-2">
+        <a href="/feed" className="flex items-center gap-2">
           <img src="/nexus-logo.png" alt="Nexus" className="h-8 w-8 rounded-lg object-cover" />
           <span className="text-sm font-semibold text-white">Nexus IITB</span>
-        </div>
+        </a>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-white/70 hover:bg-white/10"

@@ -204,7 +204,7 @@ export default async function VentureDetail({ params }) {
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-ink">{owner?.full_name}</p>
                 <p className="text-sm text-ink-3">
-                  {owner?.department} · {owner?.role}
+                  {owner?.department} · {(owner?.role === "both" ? "Founder & Builder" : owner?.role)}
                 </p>
               </div>
             </div>

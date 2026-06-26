@@ -1,3 +1,17 @@
+"use client";
+import { usePathname } from "next/navigation";
+
+export function FooterConditional() {
+  const path = usePathname();
+  const show = ["/feed", "/people", "/about"].some(p => path === p || path.startsWith(p + "?"));
+  if (!show) return null;
+  return (
+    <div className="px-4 pb-24 lg:px-7 lg:pb-7">
+      <Footer />
+    </div>
+  );
+}
+
 // @ts-nocheck
 import Link from "next/link";
 

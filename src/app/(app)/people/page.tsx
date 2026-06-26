@@ -38,7 +38,7 @@ export default async function PeoplePage() {
                     {p.full_name}
                   </p>
                   <p className="text-sm text-ink-3">
-                    {p.department} · {p.role}
+                    {p.department} · {p.role === "both" ? "Founder & Builder" : p.role}
                   </p>
                 </div>
               </div>
