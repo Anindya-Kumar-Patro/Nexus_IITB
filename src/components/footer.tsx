@@ -9,7 +9,7 @@ export function Footer() {
         {/* col 1 — brand */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-base font-bold text-white">N</div>
+            <img src="/nexus-logo.png" alt="Nexus" className="h-9 w-9 rounded-lg object-cover" />
             <span className="text-base font-semibold text-white">Nexus IITB</span>
           </div>
           <p className="text-xs leading-relaxed text-white/50">

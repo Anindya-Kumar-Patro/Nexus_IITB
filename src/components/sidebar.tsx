@@ -190,9 +190,7 @@ export function Sidebar({ name, isAuthed, userId }) {
       {/* Mobile top bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between bg-sidebar px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-semibold text-white">
-            N
-          </div>
+          <img src="/nexus-logo.png" alt="Nexus" className="h-8 w-8 rounded-lg object-cover" />
           <span className="text-sm font-semibold text-white">Nexus IITB</span>
         </div>
         <button
