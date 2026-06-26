@@ -92,9 +92,7 @@ export function Sidebar({ name, isAuthed, userId }) {
   const SidebarContent = () => (
     <>
       <div className="px-1.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-lg font-semibold text-white">
-          {isAuthed ? initials(name) : "N"}
-        </div>
+        <img src="/nexus-logo.png" alt="Nexus" className="h-12 w-12 rounded-xl object-cover" />
         {isAuthed ? (
           <>
             <p className="mt-3 text-xs text-white/50">Hi!</p>
