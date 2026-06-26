@@ -156,7 +156,6 @@ export default async function VentureDetail({ params }) {
                   isAuthed={!!user}
                 />
               </div>
-              </div>
             ) : (
               <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brand-100 bg-brand-50 px-5 py-4">
                 <p className="flex-1 text-sm text-ink-2">Sign in with your IITB email to apply for this venture.</p>
