@@ -142,7 +142,7 @@ export default async function VentureDetail({ params }) {
                   </Button>
                 </Link>
               </div>
-            ) : (
+            ) : user ? (
               <div className="flex flex-wrap items-center gap-3">
                 <ApplyButton
                   ventureId={venture.id}
@@ -155,6 +155,14 @@ export default async function VentureDetail({ params }) {
                   initialSaved={saved}
                   isAuthed={!!user}
                 />
+              </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brand-100 bg-brand-50 px-5 py-4">
+                <p className="flex-1 text-sm text-ink-2">Sign in with your IITB email to apply for this venture.</p>
+                <Link href="/feed?signin=1" className="rounded-full bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-400">
+                  Sign in to apply
+                </Link>
               </div>
             )}
           </div>
