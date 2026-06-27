@@ -6,7 +6,7 @@ import { Avatar } from "@/components/avatar";
 import { EmptyState } from "@/components/empty-state";
 import { Footer } from "@/components/footer";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 function roleLabel(role) {
   if (!role) return "";

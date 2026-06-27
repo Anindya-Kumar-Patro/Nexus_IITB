@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { FeedFilters } from "./feed-filters";
 import { ArrowRight, Rocket } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const DOMAIN_COLORS = {
   "FinTech":       { bg: "bg-violet-100", text: "text-violet-700", icon: "💰" },

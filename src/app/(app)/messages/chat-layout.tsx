@@ -39,6 +39,7 @@ export function ChatLayout({
   const router = useRouter();
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  const bodyInputRef = useRef(null);
   const [mobileView, setMobileView] = useState(selectedAppId ? "chat" : "list");
   const [showProfile, setShowProfile] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
@@ -515,10 +516,15 @@ export function ChatLayout({
                           <button onClick={() => setSelectedFile(null)} className="text-ink-3"><X size={13} /></button>
                         </div>
                       )}
-                      <form action={async (fd) => { if (selectedFile) fd.set("file", selectedFile); await sendAction(fd); setSelectedFile(null); }}
+                      <form action={async (fd) => {
+                        if (selectedFile) fd.set("file", selectedFile);
+                        if (bodyInputRef.current) bodyInputRef.current.value = "";
+                        setSelectedFile(null);
+                        await sendAction(fd);
+                      }}
                         className="flex items-center gap-2">
                         <div className="flex flex-1 items-center gap-2 rounded-full border border-line bg-white px-4 py-2">
-                          <input name="body" placeholder="Type a message..." className="flex-1 bg-transparent text-sm outline-none" autoComplete="off" />
+                          <input ref={bodyInputRef} name="body" placeholder="Type a message..." className="flex-1 bg-transparent text-sm outline-none" autoComplete="off" />
                           <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 text-ink-3 hover:text-brand-600">
                             <Paperclip size={17} />
                           </button>
