@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { Footer } from "@/components/footer";
 import { Topbar } from "@/components/topbar";
 import { Mail, Rocket, Users, MessageCircle, Bookmark, Search } from "lucide-react";
 
@@ -145,6 +146,7 @@ export default function AboutPage() {
 
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

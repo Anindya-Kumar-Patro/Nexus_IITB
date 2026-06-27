@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { Sidebar } from "@/components/sidebar";
-import { FooterConditional } from "@/components/footer";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }) {
@@ -23,7 +22,6 @@ export default async function AppLayout({ children }) {
         <main className="flex-1 overflow-y-auto px-4 pt-16 pb-20 lg:px-7 lg:pt-7 lg:pb-7">
           {children}
         </main>
-        <FooterConditional />
       </div>
     </div>
   );

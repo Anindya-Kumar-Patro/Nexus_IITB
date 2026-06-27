@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Footer } from "@/components/footer";
 import { Topbar } from "@/components/topbar";
 import { Avatar } from "@/components/avatar";
 import { EmptyState } from "@/components/empty-state";
@@ -63,6 +64,7 @@ export default async function PeoplePage() {
           ))}
         </div>
       )}
+      <Footer />
     </div>
   );
 }

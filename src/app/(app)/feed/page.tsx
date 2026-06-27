@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Footer } from "@/components/footer";
 import { Topbar } from "@/components/topbar";
 import { VentureCard } from "@/components/venture-card";
 import { EmptyState } from "@/components/empty-state";
@@ -200,6 +201,7 @@ export default async function FeedPage({ searchParams }) {
           ))}
         </div>
       )}
+      <Footer />
     </div>
   );
 }
