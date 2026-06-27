@@ -131,7 +131,7 @@ export function ChatLayout({
           <div className="flex flex-col items-center text-center">
             <Avatar name={applicantProfile.full_name} size={72} />
             <h3 className="mt-3 text-lg font-semibold text-ink">{applicantProfile.full_name}</h3>
-            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role === "both" ? "Founder & Builder" : applicantProfile.role}</p>
+            <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role ?.toLowerCase() === "both" ? "Founder & Builder" : applicantProfile.role}</p>
             <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
           </div>
           {applicantProfile.skills && applicantProfile.skills.length > 0 && (
@@ -173,7 +173,7 @@ export function ChatLayout({
             <div className="flex flex-col items-center text-center">
               <Avatar name={applicantProfile.full_name} size={64} />
               <h2 className="mt-3 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
-              <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role === "both" ? "Founder & Builder" : applicantProfile.role}</p>
+              <p className="text-sm text-ink-3">{applicantProfile.department} · {applicantProfile.role ?.toLowerCase() === "both" ? "Founder & Builder" : applicantProfile.role}</p>
               <p className="text-xs text-ink-3">{applicantProfile.roll_number}</p>
             </div>
             {applicantProfile.skills && applicantProfile.skills.length > 0 && (
@@ -396,7 +396,7 @@ export function ChatLayout({
                   </p>
                   <p className="truncate text-xs text-ink-3">
                     {isReceived(selectedApp)
-                      ? (ventureDetails?.title ?? "") + " · " + (selectedApp.role === "both" ? "Founder & Builder" : selectedApp.role)
+                      ? (ventureDetails?.title ?? "") + " · " + (selectedApp.role ?.toLowerCase() === "both" ? "Founder & Builder" : selectedApp.role)
                       : "Applied as " + selectedApp.role}
                   </p>
                 </div>

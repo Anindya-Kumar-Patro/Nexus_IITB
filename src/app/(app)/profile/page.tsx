@@ -85,7 +85,7 @@ export default async function ProfilePage({ searchParams }) {
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg sm:text-xl font-semibold text-ink truncate">{profile?.full_name}</h2>
                 <p className="text-xs sm:text-sm text-ink-3 truncate">
-                  {profile?.department} · {profile?.role === "both" ? "Founder & Builder" : profile?.role} · {profile?.roll_number}
+                  {profile?.department} · {profile?.role ?.toLowerCase() === "both" ? "Founder & Builder" : profile?.role} · {profile?.roll_number}
                 </p>
               </div>
               <Link href="/profile/setup" className="shrink-0">

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 function roleLabel(role) {
   if (!role) return "";
-  if (role === "both") return "Founder & Builder";
+  if (role ?.toLowerCase() === "both") return "Founder & Builder";
   return role;
 }
 
