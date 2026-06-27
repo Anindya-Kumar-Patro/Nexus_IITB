@@ -39,11 +39,11 @@ export async function sendMessage(
 
     if (uploadError) return { error: uploadError.message };
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = await supabase.storage
       .from("chat-files")
-      .getPublicUrl(path);
+      .createSignedUrl(path, 60 * 60 * 24 * 365);
 
-    file_url = urlData?.publicUrl ?? null;
+    file_url = urlData?.signedUrl ?? null;
     file_name = file.name;
   }
 
