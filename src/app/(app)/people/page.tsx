@@ -8,6 +8,12 @@ import { Footer } from "@/components/footer";
 
 export const dynamic = "force-dynamic";
 
+function roleLabel(role) {
+  if (!role) return "";
+  if (role === "both") return "Founder & Builder";
+  return role;
+}
+
 export default async function PeoplePage() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -19,8 +25,8 @@ export default async function PeoplePage() {
   const people = data ?? [];
 
   return (
-    <div className="flex flex-col" style={{ minHeight: "calc(100vh - 120px)" }}>
-      <div className="flex-1">
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
+      <div style={{ flex: 1 }}>
         <Topbar title="People" />
         {people.length === 0 ? (
           <EmptyState title="No one here yet" />
@@ -39,7 +45,7 @@ export default async function PeoplePage() {
                       {p.full_name}
                     </p>
                     <p className="text-sm text-ink-3">
-                      {p.department} · {p.role === "both" ? "Founder & Builder" : p.role}
+                      {p.department} · {roleLabel(p.role)}
                     </p>
                   </div>
                 </div>
@@ -62,7 +68,7 @@ export default async function PeoplePage() {
           </div>
         )}
       </div>
-      <div className="mt-12">
+      <div style={{ marginTop: "48px" }}>
         <Footer />
       </div>
     </div>
