@@ -81,7 +81,7 @@ export default async function PublicProfilePage({ params }) {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {profile.role && (
                     <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800">
-                      {profile.role}
+                      {profile.role === "both" ? "Founder & Builder" : profile.role}
                     </span>
                   )}
                   {profile.account_type && profile.account_type !== "student" && (
