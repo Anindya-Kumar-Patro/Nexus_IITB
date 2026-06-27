@@ -201,6 +201,7 @@ export default async function FeedPage({ searchParams }) {
           ))}
         </div>
       )}
+      <div className="mt-8" />
       <Footer />
     </div>
   );
