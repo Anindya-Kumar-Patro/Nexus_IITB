@@ -396,7 +396,7 @@ export function ChatLayout({
                   </p>
                   <p className="truncate text-xs text-ink-3">
                     {isReceived(selectedApp)
-                      ? (ventureDetails?.title ?? "") + " · " + selectedApp.role
+                      ? (ventureDetails?.title ?? "") + " · " + (selectedApp.role === "both" ? "Founder & Builder" : selectedApp.role)
                       : "Applied as " + selectedApp.role}
                   </p>
                 </div>

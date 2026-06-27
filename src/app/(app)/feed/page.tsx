@@ -85,7 +85,8 @@ export default async function FeedPage({ searchParams }) {
     .slice(0, 8);
 
   return (
-    <div>
+    <div className="flex flex-col" style={{ minHeight: "calc(100vh - 120px)" }}>
+      <div className="flex-1">
       <Topbar title="Feed" />
 
       {/* hero — only show when not filtering */}
@@ -201,8 +202,10 @@ export default async function FeedPage({ searchParams }) {
           ))}
         </div>
       )}
-      <div className="mt-8" />
-      <Footer />
+      </div>
+      <div className="mt-12">
+        <Footer />
+      </div>
     </div>
   );
 }

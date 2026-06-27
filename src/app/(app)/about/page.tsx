@@ -13,7 +13,7 @@ const FEATURES = [
 
 export default function AboutPage() {
   return (
-    <div>
+    <div className="flex flex-col" style={{ minHeight: "calc(100vh - 120px)" }}>
       <Topbar title="About" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ alignItems: "stretch" }}>
@@ -146,7 +146,9 @@ export default function AboutPage() {
 
         </div>
       </div>
-      <Footer />
+      <div className="mt-12">
+        <Footer />
+      </div>
     </div>
   );
 }
