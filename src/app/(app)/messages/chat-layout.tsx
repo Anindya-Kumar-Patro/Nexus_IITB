@@ -249,7 +249,7 @@ export function ChatLayout({
   );
 
   return (
-    <div className="flex h-full" id="chat-root">
+    <div className="flex" style={{ height: "100%", overflow: "hidden" }} id="chat-root">
 
       {/* Mobile profile full screen */}
       {mobileView === "profile" && selectedApp && (

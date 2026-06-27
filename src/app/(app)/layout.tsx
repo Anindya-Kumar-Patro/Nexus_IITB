@@ -16,9 +16,10 @@ export default async function AppLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <Sidebar name={name} isAuthed={!!user} userId={user?.id} />
-      <main className="flex-1 min-w-0 h-full overflow-y-auto px-4 pt-16 pb-20 lg:px-7 lg:pt-7 lg:pb-7">
+      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", padding: "28px" }}
+        className="pt-16 pb-20 px-4 lg:pt-7 lg:pb-7 lg:px-7">
         {children}
       </main>
     </div>
