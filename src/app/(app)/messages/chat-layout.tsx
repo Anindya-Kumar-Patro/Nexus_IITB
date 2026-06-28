@@ -358,7 +358,7 @@ export function ChatLayout({
 
       {/* Pane 3 - chat */}
       <div className={cn(
-        "flex-1 flex-col overflow-hidden min-h-0",
+        "flex-1 flex-col overflow-hidden min-h-0 min-w-0",
         mobileView === "chat" ? "flex" : "hidden lg:flex",
         mobileView === "profile" && "!hidden"
       )}>
@@ -432,8 +432,8 @@ export function ChatLayout({
               )}
             </div>
 
-            <div className="flex flex-1 overflow-hidden min-h-0">
-              <div className="flex flex-1 flex-col min-h-0">
+            <div className="flex flex-1 overflow-hidden min-h-0 min-w-0">
+              <div className="flex flex-1 flex-col min-h-0 min-w-0">
                 {settings.blocked ? (
                   <div className="flex flex-1 items-center justify-center">
                     <div className="text-center">
