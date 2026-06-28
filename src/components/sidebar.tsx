@@ -90,7 +90,7 @@ export function Sidebar({ name, isAuthed, userId }) {
   useEffect(() => { setMobileOpen(false); }, [path, searchParams]);
 
   const SidebarContent = ({ variant = "desktop" }) => (
-    <>
+    <div className="flex flex-1 flex-col">
       <div className="px-1.5">
         <img src="/nexus-logo.png" alt="Nexus" className="h-12 w-12 rounded-xl object-cover" />
         {isAuthed ? (
@@ -139,7 +139,7 @@ export function Sidebar({ name, isAuthed, userId }) {
         </>
       )}
 
-      <div className={cn("flex flex-col gap-2", variant === "desktop" ? "mt-auto" : "mt-6 pb-4")}>
+      <div className={cn("flex flex-col gap-2", variant === "desktop" ? "mt-auto" : "mt-auto pb-2")}>
         {isAuthed ? (
           <>
             <Link
@@ -213,9 +213,7 @@ export function Sidebar({ name, isAuthed, userId }) {
                 <X size={20} />
               </button>
             </div>
-            <div className="flex flex-1 flex-col overflow-y-auto">
-              <SidebarContent variant="mobile" />
-            </div>
+<SidebarContent variant="mobile" />
           </aside>
         </div>
       )}
