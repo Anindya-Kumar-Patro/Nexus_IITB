@@ -358,7 +358,7 @@ export function ChatLayout({
 
       {/* Pane 3 - chat */}
       <div className={cn(
-        "flex-1 flex-col overflow-hidden",
+        "flex-1 flex-col overflow-hidden min-h-0",
         mobileView === "chat" ? "flex" : "hidden lg:flex",
         mobileView === "profile" && "!hidden"
       )}>
