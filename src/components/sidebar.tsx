@@ -175,7 +175,7 @@ export function Sidebar({ name, isAuthed, userId }) {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 
   return (
