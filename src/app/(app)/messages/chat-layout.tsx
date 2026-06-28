@@ -448,7 +448,7 @@ export function ChatLayout({
                 ) : selectedApp.status === "accepted" && conversationId ? (
                   <>
                     {/* messages - scrollable */}
-                    <div className="flex-1 overflow-y-auto px-3 py-4 min-h-0">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 min-h-0">
                       <div className="flex flex-col gap-2">
                         {messages.length === 0 && (
                           <p className="py-8 text-center text-sm text-ink-3">No messages yet. Say hello!</p>
@@ -477,7 +477,7 @@ export function ChatLayout({
                                 {msg.file_url && (
                                   isImageFile(msg.file_name) ? (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-1.5 max-h-40 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "flex"; }} /><a href={msg.file_url} target="_blank" rel="noreferrer" style={{ display: "none" }} className={cn("mt-1.5 items-center gap-2 rounded-lg border px-3 py-2 text-xs", isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800")}>{getFileIcon(msg.file_name)}<span className="truncate">{msg.file_name ?? "Image"}</span></a>
+                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-1.5 max-h-40 max-w-full rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "flex"; }} /><a href={msg.file_url} target="_blank" rel="noreferrer" style={{ display: "none" }} className={cn("mt-1.5 items-center gap-2 rounded-lg border px-3 py-2 text-xs", isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800")}>{getFileIcon(msg.file_name)}<span className="truncate">{msg.file_name ?? "Image"}</span></a>
                                     </a>
                                   ) : (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer"
