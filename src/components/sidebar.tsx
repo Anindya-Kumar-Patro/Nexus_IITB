@@ -206,7 +206,7 @@ export function Sidebar({ name, isAuthed, userId }) {
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 flex w-72 flex-col bg-sidebar p-5 overflow-y-auto">
+          <aside className="absolute left-0 top-0 bottom-0 flex w-72 flex-col bg-sidebar p-5 pb-24 overflow-y-auto">
             <div className="mb-4 flex shrink-0 items-center justify-between">
               <span className="text-sm font-semibold text-white">Menu</span>
               <button onClick={() => setMobileOpen(false)} className="text-white/60 hover:text-white">
