@@ -449,7 +449,7 @@ export function ChatLayout({
                   <>
                     {/* messages - scrollable */}
                     <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 min-h-0">
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 w-full overflow-x-hidden">
                         {messages.length === 0 && (
                           <p className="py-8 text-center text-sm text-ink-3">No messages yet. Say hello!</p>
                         )}
@@ -466,7 +466,7 @@ export function ChatLayout({
                             );
                           }
                           return (
-                            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                            <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
                               <div className={cn(
                                 "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
                                 isMe
