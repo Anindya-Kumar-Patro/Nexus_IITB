@@ -169,8 +169,8 @@ export function ChatLayout({
   const PendingContent = () => (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       {isReceived(selectedApp) && applicantProfile ? (
-        <div className="mx-auto max-w-md">
-          <div className="rounded-xl border border-line bg-white p-5">
+        <div className="w-full max-w-md mx-auto px-2">
+          <div className="rounded-xl border border-line bg-white p-4 sm:p-5">
             <div className="flex flex-col items-center text-center">
               <Avatar name={applicantProfile.full_name} size={64} />
               <h2 className="mt-3 text-xl font-semibold text-ink">{applicantProfile.full_name}</h2>
@@ -224,8 +224,8 @@ export function ChatLayout({
           </div>
         </div>
       ) : ventureDetails ? (
-        <div className="mx-auto max-w-md">
-          <div className="rounded-xl border border-line bg-white p-5">
+        <div className="w-full max-w-md mx-auto px-2">
+          <div className="rounded-xl border border-line bg-white p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-ink">{ventureDetails.title}</h2>
