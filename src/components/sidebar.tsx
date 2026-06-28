@@ -89,7 +89,7 @@ export function Sidebar({ name, isAuthed, userId }) {
   // close mobile menu on navigation
   useEffect(() => { setMobileOpen(false); }, [path, searchParams]);
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ variant = "desktop" }) => (
     <>
       <div className="px-1.5">
         <img src="/nexus-logo.png" alt="Nexus" className="h-12 w-12 rounded-xl object-cover" />
@@ -139,7 +139,7 @@ export function Sidebar({ name, isAuthed, userId }) {
         </>
       )}
 
-      <div className="mt-auto flex flex-col gap-2">
+      <div className={cn("flex flex-col gap-2", variant === "desktop" ? "mt-auto" : "mt-6 pb-4")}>
         {isAuthed ? (
           <>
             <Link
@@ -207,13 +207,15 @@ export function Sidebar({ name, isAuthed, userId }) {
             onClick={() => setMobileOpen(false)}
           />
           <aside className="absolute left-0 top-0 bottom-0 flex w-72 flex-col bg-sidebar p-5 overflow-y-auto">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex shrink-0 items-center justify-between">
               <span className="text-sm font-semibold text-white">Menu</span>
               <button onClick={() => setMobileOpen(false)} className="text-white/60 hover:text-white">
                 <X size={20} />
               </button>
             </div>
-            <SidebarContent />
+            <div className="flex flex-1 flex-col overflow-y-auto">
+              <SidebarContent variant="mobile" />
+            </div>
           </aside>
         </div>
       )}
