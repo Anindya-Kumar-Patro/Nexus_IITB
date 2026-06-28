@@ -11,6 +11,7 @@ export default function MessagesLayout({ children }) {
           bottom: 64px;
           overflow: hidden;
           z-index: 10;
+          max-width: 100vw;
         }
         @media (min-width: 1024px) {
           .messages-container {
