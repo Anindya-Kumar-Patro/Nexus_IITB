@@ -273,8 +273,8 @@ export function ChatLayout({
       {/* Pane 2 - list */}
       <div className={cn(
         "flex-col border-r border-line bg-white",
-        "w-full lg:w-72 lg:shrink-0",
-        mobileView === "list" ? "flex" : "hidden lg:flex"
+        "lg:w-72 lg:shrink-0",
+        mobileView === "list" ? "flex w-full" : "hidden lg:flex"
       )}>
         {/* Tab switcher - Applied / Received */}
         <div className="flex border-b border-line">
