@@ -250,7 +250,7 @@ export function ChatLayout({
   );
 
   return (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden" }} id="chat-root">
+    <div className="flex h-full overflow-hidden w-full" id="chat-root">
 
       {/* Mobile profile full screen */}
       {mobileView === "profile" && selectedApp && (
@@ -272,8 +272,8 @@ export function ChatLayout({
 
       {/* Pane 2 - list */}
       <div className={cn(
-        "flex flex-col border-r border-line bg-white",
-        "w-full lg:w-72 lg:shrink-0 lg:flex",
+        "flex-col border-r border-line bg-white",
+        "w-full lg:w-72 lg:shrink-0",
         mobileView === "list" ? "flex" : "hidden lg:flex"
       )}>
         {/* Tab switcher - Applied / Received */}
@@ -358,9 +358,9 @@ export function ChatLayout({
 
       {/* Pane 3 - chat */}
       <div className={cn(
-        "flex flex-1 flex-col overflow-hidden",
+        "flex-1 flex-col overflow-hidden",
         mobileView === "chat" ? "flex" : "hidden lg:flex",
-        mobileView === "profile" && "hidden"
+        mobileView === "profile" && "!hidden"
       )}>
         {!selectedApp ? (
           <div className="hidden lg:flex flex-1 items-center justify-center bg-brand-50/30">
@@ -477,7 +477,7 @@ export function ChatLayout({
                                 {msg.file_url && (
                                   isImageFile(msg.file_name) ? (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer">
-                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-1.5 max-h-40 rounded-lg object-cover" />
+                                      <img src={msg.file_url} alt={msg.file_name ?? "image"} className="mt-1.5 max-h-40 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "flex"; }} /><a href={msg.file_url} target="_blank" rel="noreferrer" style={{ display: "none" }} className={cn("mt-1.5 items-center gap-2 rounded-lg border px-3 py-2 text-xs", isMe ? "border-white/20 bg-white/10 text-white" : "border-line bg-brand-50 text-brand-800")}>{getFileIcon(msg.file_name)}<span className="truncate">{msg.file_name ?? "Image"}</span></a>
                                     </a>
                                   ) : (
                                     <a href={msg.file_url} target="_blank" rel="noreferrer"

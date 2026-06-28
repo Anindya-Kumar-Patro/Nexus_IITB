@@ -99,7 +99,7 @@ export function FeedFilters({
           )}
         >
           <SlidersHorizontal size={16} />
-          Filters
+          <span className="hidden sm:inline">Filters</span>
           {(stage || domain || role) && (
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-brand-600">
               {[stage, domain, role].filter(Boolean).length}
