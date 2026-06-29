@@ -1,6 +1,6 @@
 // @ts-nocheck
 import type { Metadata } from "next";
-import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
+import { NavigationProgress } from "@/components/navigation-progress";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans" suppressHydrationWarning>
-        <ProgressBar height="3px" color="#6d28d9" options={{ showSpinner: false }} shallowRouting />
+        <NavigationProgress />
         {children}
       </body>
     </html>
