@@ -4,8 +4,17 @@ export type Department =
   | "Metallurgy" | "EnergyScience" | "EngineeringPhysics" | "IDC" | "SJMSOM"
   | "Mathematics" | "Physics" | "Chemistry" | "Other";
 
-export type UserRole = "Founder" | "Builder" | "Both";
-export type AccountType = "student" | "faculty" | "investor";
+export type UserRole =
+  | "Founder"
+  | "Builder"
+  | "Investor"
+  | "Founder & Builder"
+  | "Founder & Investor"
+  | "Builder & Investor"
+  | "All three"
+  | "Both";
+
+export type AccountType = "student" | "alumni" | "faculty" | "investor";
 export type VentureStage = "Brainstorming" | "MVP" | "Early traction" | "Funded";
 export type ApplicationStatus = "pending" | "accepted" | "rejected";
 
@@ -32,6 +41,7 @@ export interface Venture {
   stage: VentureStage;
   roles_needed: string[];
   domain: string | null;
+  venture_type: string | null;
   created_at: string;
   updated_at: string;
 }

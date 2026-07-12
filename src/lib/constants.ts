@@ -7,7 +7,15 @@ export const DEPARTMENTS: Department[] = [
   "Mathematics", "Physics", "Chemistry", "Other",
 ];
 
-export const ROLES: UserRole[] = ["Founder", "Builder", "Both"];
+export const ROLES: UserRole[] = [
+  "Founder",
+  "Builder",
+  "Investor",
+  "Founder & Builder",
+  "Founder & Investor",
+  "Builder & Investor",
+  "All three",
+];
 
 export const STAGES: VentureStage[] = ["Brainstorming", "MVP", "Early traction", "Funded"];
 
@@ -18,7 +26,12 @@ export const ROLES_NEEDED = [
 
 export const DOMAINS = [
   "FinTech", "EdTech", "HealthTech", "DeepTech", "SaaS", "Hardware",
-  "Consumer", "Sustainability", "AI / ML", "Other",
+  "Consumer", "Sustainability", "AI / ML", "Research", "Other",
+];
+
+export const VENTURE_TYPES = [
+  { value: "startup", label: "Startup" },
+  { value: "research", label: "Research" },
 ];
 
 export const SKILLS = [
@@ -36,6 +49,7 @@ export const STAGE_STYLES: Record<VentureStage, string> = {
 
 export const ACCOUNT_TYPES: { value: string; label: string }[] = [
   { value: "student", label: "Student" },
+  { value: "alumni", label: "Alumni" },
   { value: "faculty", label: "Faculty" },
   { value: "investor", label: "Investor (coming soon)" },
 ];
@@ -45,3 +59,11 @@ export const APPLICATION_STATUS_STYLES: Record<ApplicationStatus, string> = {
   accepted: "bg-emerald-50 text-emerald-700",
   rejected: "bg-red-50 text-red-700",
 };
+
+export function roleLabel(role: string | null | undefined): string {
+  if (!role) return "";
+  const lower = role.toLowerCase();
+  if (lower === "both") return "Founder & Builder";
+  if (lower === "all three") return "Founder, Builder & Investor";
+  return role;
+}
