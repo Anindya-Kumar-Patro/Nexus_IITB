@@ -80,6 +80,32 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   redirect("/feed");
 }
 
+
+export async function resetPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Please enter your email address." };
+
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin") ?? "";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/reset`,
+  });
+
+  if (error) return { error: "Could not send reset email. Please try again." };
+  return { sent: true };
+}
+
+export async function updatePassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 6) return { error: "Password must be at least 6 characters." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: "Could not update password. Please try again." };
+  revalidatePath("/", "layout");
+  redirect("/feed");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

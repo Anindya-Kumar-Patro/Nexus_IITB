@@ -2,7 +2,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { signIn, signUp, type AuthState } from "@/actions/auth";
+import { signIn, signUp, resetPassword, type AuthState } from "@/actions/auth";
 import { Input, Label, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/chip-select";
@@ -10,7 +10,7 @@ import { DEPARTMENTS, ROLES, SKILLS, ACCOUNT_TYPES } from "@/lib/constants";
 import { X, MailCheck } from "lucide-react";
 
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   if (!open) return null;
 
   return (
@@ -48,13 +48,15 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
 
-        {mode === "signin" ? <SignInForm /> : <SignUpForm onSwitchToSignIn={() => setMode("signin")} />}
+        {mode === "signin" && <SignInForm onForgotPassword={() => setMode("forgot")} />}
+        {mode === "signup" && <SignUpForm onSwitchToSignIn={() => setMode("signin")} />}
+        {mode === "forgot" && <ForgotPasswordForm onBack={() => setMode("signin")} />}
       </div>
     </div>
   );
 }
 
-function SignInForm() {
+function SignInForm({ onForgotPassword }: { onForgotPassword: () => void }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signIn, {});
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -66,6 +68,12 @@ function SignInForm() {
       <div>
         <Label>Password</Label>
         <Input name="password" type="password" required />
+      </div>
+      <div className="flex justify-end">
+        <button type="button" onClick={onForgotPassword}
+          className="text-xs text-ink-3 hover:text-brand-600 hover:underline">
+          Forgot password?
+        </button>
       </div>
       {state.error && (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>
@@ -173,6 +181,50 @@ function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
       <Button type="submit" disabled={pending} className="justify-self-start sm:col-span-2">
         {pending ? "Creating account…" : "Create account"}
       </Button>
+    </form>
+  );
+}
+function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
+  const [state, action, pending] = useActionState<AuthState, FormData>(resetPassword, {});
+
+  if (state.sent) {
+    return (
+      <div className="flex flex-col items-center py-4 text-center">
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+          <MailCheck size={22} />
+        </div>
+        <p className="font-medium text-ink">Check your inbox</p>
+        <p className="mt-1 text-sm text-ink-2">
+          We sent a password reset link to your email. Click it to set a new password.
+        </p>
+        <button type="button" onClick={onBack}
+          className="mt-4 text-sm text-brand-600 hover:underline">
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-lg font-semibold text-ink">Reset password</h2>
+        <p className="mt-1 text-sm text-ink-3">Enter your IITB email and we will send you a reset link.</p>
+      </div>
+      <div>
+        <Label>IITB email</Label>
+        <Input name="email" type="email" placeholder="rollno@iitb.ac.in" required autoFocus />
+      </div>
+      {state.error && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>
+      )}
+      <Button type="submit" disabled={pending}>
+        {pending ? "Sending…" : "Send reset link"}
+      </Button>
+      <button type="button" onClick={onBack}
+        className="text-sm text-ink-3 hover:text-brand-600 hover:underline">
+        Back to sign in
+      </button>
     </form>
   );
 }
